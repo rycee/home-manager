@@ -42,7 +42,8 @@ in
       example = [ ./pubkeys.txt ];
       default = [ ];
       description = ''
-        A list of keyfiles to be imported into GnuPG.
+        A list of keyfiles to be imported into GnuPG. These keyfiles
+        will be copied into the world-readable Nix store.
       '';
     };
   };
