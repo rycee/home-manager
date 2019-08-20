@@ -78,7 +78,7 @@ in
       importGgpKeys = dag.entryAfter ["linkGeneration"] (
         let
           importKey = keyfile: ''
-            ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString keyfile)}
+            ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString (pkgs.copyPathToStore keyfile))}
           '';
         in
           lib.concatMapStrings (x: importKey x) cfg.keyfiles
