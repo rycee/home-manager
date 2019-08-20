@@ -73,13 +73,15 @@ in
 
     home.file.".gnupg/gpg.conf".text = cfgText;
 
-    home.activation.importGgpKeys = dag.entryAfter ["linkGeneration"] (
-      let
-        importKey = keyfile: ''
-          ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString keyfile)}
-        '';
-      in
-        lib.concatMapStrings (x: importKey x) cfg.keyfiles
-    );
+    home.activation = mkIf (cfg.keyfiles != []) {
+      importGgpKeys = dag.entryAfter ["linkGeneration"] (
+        let
+          importKey = keyfile: ''
+            ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString keyfile)}
+          '';
+        in
+          lib.concatMapStrings (x: importKey x) cfg.keyfiles
+      );
+    };
   };
 }
