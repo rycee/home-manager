@@ -73,7 +73,7 @@ in
 
     home.file.".gnupg/gpg.conf".text = cfgText;
 
-    home.activation.importGPGKeys = dag.entryAfter ["linkGeneration"] (
+    home.activation.importGgpKeys = dag.entryAfter ["linkGeneration"] (
       let
         importKey = keyfile: ''
           ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString keyfile)}
