@@ -4,6 +4,7 @@ with lib;
 
 let
   cfg = config.programs.gpg;
+  dag = config.lib.dag;
 
   mkKeyValue = key: value:
     if isString value
@@ -35,6 +36,15 @@ in
         <link xlink:href="https://gnupg.org/documentation/manpage.html"/>.
       '';
     };
+
+    keyfiles = mkOption {
+      type = types.listOf types.path;
+      example = [ ./pubkeys.txt ];
+      default = [ ];
+      description = ''
+        A list of keyfiles to be imported into GnuPG.
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -62,5 +72,14 @@ in
     home.packages = [ pkgs.gnupg ];
 
     home.file.".gnupg/gpg.conf".text = cfgText;
+
+    home.activation.importGPGKeys = dag.entryAfter ["linkGeneration"] (
+      let
+        importKey = keyfile: ''
+          ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString keyfile)}
+        '';
+      in
+        lib.concatMapStrings (x: importKey x) cfg.keyfiles
+    );
   };
 }
