@@ -70,6 +70,14 @@ with lib;
           '';
         };
 
+        copy = mkOption {
+          type = types.bool;
+          default = false;
+          description = ''
+            Copy the file instead of creating a symbolic link.
+          '';
+        };
+
         onChange = mkOption {
           type = types.lines;
           default = "";

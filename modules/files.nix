@@ -21,6 +21,8 @@ let
       then file.source
       else builtins.path { path = file.source; name = sourceName; };
 
+  copyAccumulator = ".home-manager-copy";
+
 in
 
 {
@@ -66,8 +68,9 @@ in
 
           forcedPaths=(${forcedPaths})
 
-          newGenFiles="$1"
-          shift
+          oldGenFiles="$1"
+          newGenFiles="$2"
+          shift 2
           for sourcePath in "$@" ; do
             relativePath="''${sourcePath#$newGenFiles/}"
             targetPath="$HOME/$relativePath"
@@ -83,7 +86,8 @@ in
             if [[ -n $forced ]]; then
               $VERBOSE_ECHO "Skipping collision check for $targetPath"
             elif [[ -e "$targetPath" \
-                && ! "$(readlink "$targetPath")" == $homeFilePattern ]] ; then
+                && ! "$(readlink "$targetPath")" == $homeFilePattern ]] \
+                && ! cmp --quiet "$targetPath" "$oldGenFiles/$relativePath"; then
               if [[ ! -L "$targetPath" && -n "$HOME_MANAGER_BACKUP_EXT" ]] ; then
                 backup="$targetPath.$HOME_MANAGER_BACKUP_EXT"
                 if [[ -e "$backup" ]]; then
@@ -108,9 +112,10 @@ in
       ''
         function checkNewGenCollision() {
           local newGenFiles
+          oldGenFiles="$(readlink -e "$oldGenPath/home-files")"
           newGenFiles="$(readlink -e "$newGenPath/home-files")"
           find "$newGenFiles" \( -type f -or -type l \) \
-              -exec bash ${check} "$newGenFiles" {} +
+              -exec bash ${check} "$oldGenFiles" "$newGenFiles" {} +
         }
 
         checkNewGenCollision || exit 1
@@ -142,16 +147,23 @@ in
       let
         link = pkgs.writeText "link" ''
           newGenFiles="$1"
+          copyList="$1/${copyAccumulator}"
           shift
           for sourcePath in "$@" ; do
             relativePath="''${sourcePath#$newGenFiles/}"
-            targetPath="$HOME/$relativePath"
-            if [[ -e "$targetPath" && ! -L "$targetPath" && -n "$HOME_MANAGER_BACKUP_EXT" ]] ; then
-              backup="$targetPath.$HOME_MANAGER_BACKUP_EXT"
-              $DRY_RUN_CMD mv $VERBOSE_ARG "$targetPath" "$backup" || errorEcho "Moving '$targetPath' failed!"
+            if [[ "$relativePath" != "${copyAccumulator}" ]]; then
+              targetPath="$HOME/$relativePath"
+              if [[ -e "$targetPath" && ! -L "$targetPath" && -n "$HOME_MANAGER_BACKUP_EXT" ]] ; then
+                backup="$targetPath.$HOME_MANAGER_BACKUP_EXT"
+                $DRY_RUN_CMD mv $VERBOSE_ARG "$targetPath" "$backup" || errorEcho "Moving '$targetPath' failed!"
+              fi
+              $DRY_RUN_CMD mkdir -p $VERBOSE_ARG "$(dirname "$targetPath")"
+              if grep -Fxq "$relativePath" "$copyList"; then
+                $DRY_RUN_CMD cp --remove-destination $VERBOSE_ARG "$sourcePath" "$targetPath"
+              else
+                $DRY_RUN_CMD ln -nsf $VERBOSE_ARG "$sourcePath" "$targetPath"
+              fi
             fi
-            $DRY_RUN_CMD mkdir -p $VERBOSE_ARG "$(dirname "$targetPath")"
-            $DRY_RUN_CMD ln -nsf $VERBOSE_ARG "$sourcePath" "$targetPath"
           done
         '';
 
@@ -162,13 +174,15 @@ in
           # considered part of a Home Manager generation.
           homeFilePattern="$(readlink -e "${builtins.storeDir}")/*-home-manager-files/*"
 
-          newGenFiles="$1"
-          shift 1
+          oldGenFiles="$1"
+          newGenFiles="$2"
+          shift 2
           for relativePath in "$@" ; do
             targetPath="$HOME/$relativePath"
             if [[ -e "$newGenFiles/$relativePath" ]] ; then
               $VERBOSE_ECHO "Checking $targetPath: exists"
-            elif [[ ! "$(readlink "$targetPath")" == $homeFilePattern ]] ; then
+            elif [[ ! "$(readlink "$targetPath")" == $homeFilePattern ]] \
+                 && ! cmp --quiet "$targetPath" "$oldGenFiles/$relativePath"; then
               warnEcho "Path '$targetPath' not link into Home Manager generation. Skipping delete."
             else
               $VERBOSE_ECHO "Checking $targetPath: gone (deleting)"
@@ -217,7 +231,7 @@ in
             # generation. The find command below will print the
             # relative path of the entry.
             find "$oldGenFiles" '(' -type f -or -type l ')' -printf '%P\0' \
-              | xargs -0 bash ${cleanup} "$newGenFiles"
+              | xargs -0 bash ${cleanup} "$oldGenFiles" "$newGenFiles"
           }
 
           cleanOldGen
@@ -266,12 +280,15 @@ in
 
         # Needed in case /nix is a symbolic link.
         realOut="$(realpath -m "$out")"
+        copylist="$(realpath -m "$realOut/${copyAccumulator}")"
+        touch "$copylist"
 
         function insertFile() {
           local source="$1"
           local relTarget="$2"
           local executable="$3"
           local recursive="$4"
+          local copy="$5"
 
           # Figure out the real absolute path to the target.
           local target
@@ -285,9 +302,12 @@ in
 
           mkdir -p "$(dirname "$target")"
           if [[ -d $source ]]; then
-            if [[ $recursive ]]; then
+            if [[ $recursive || $copy ]]; then
               mkdir -p "$target"
               lndir -silent "$source" "$target"
+              if [[ $copy ]]; then
+                find "$source" -type f -printf '%P\0' | xargs -0 -n 1 -I '{}' echo "$relTarget/{}" >> "$copylist"
+              fi
             else
               ln -s "$source" "$target"
             fi
@@ -312,6 +332,9 @@ in
                 chmod -x "$target"
               fi
             fi
+            if [[ $copy ]]; then
+              echo "$relTarget" >> "$copylist"
+            fi
           fi
         }
       '' + concatStrings (
@@ -321,7 +344,8 @@ in
                      "${if v.executable == null
                         then "inherit"
                         else builtins.toString v.executable}" \
-                     "${builtins.toString v.recursive}"
+                     "${builtins.toString v.recursive}" \
+                     "${builtins.toString v.copy}"
         '') cfg
       ));
   };
