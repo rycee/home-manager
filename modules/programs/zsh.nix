@@ -32,6 +32,29 @@ let
 
   stateVersion = config.home.stateVersion;
 
+  completionModule = types.submodule ({ config, ... }: {
+    options = {
+      enable = mkOption {
+        default = true;
+        description = ''
+          Whether to enable zsh completion. Don't forget to add
+          <programlisting language="nix">
+            environment.pathsToLink = [ "/share/zsh" ];
+          </programlisting>
+          to your system configuration to get completion for system packages (e.g. systemd).
+        '';
+        type = types.bool;
+      };
+
+      path = mkOption {
+        type = types.nullOr types.path;
+        default = null;
+        example = literalExample ''"''${config.xdg.cacheHome}/zsh/zcompdump-$ZSH_VERSION"'';
+        description = "compinit dump location";
+      };
+    };
+  });
+
   historyModule = types.submodule ({ config, ... }: {
     options = {
       size = mkOption {
@@ -234,16 +257,12 @@ in
         type = types.attrsOf types.str;
       };
 
-      enableCompletion = mkOption {
-        default = true;
+      completion = mkOption {
+        type = completionModule;
+        default = {};
         description = ''
-          Enable zsh completion. Don't forget to add
-          <programlisting language="nix">
-            environment.pathsToLink = [ "/share/zsh" ];
-          </programlisting>
-          to your system configuration to get completion for system packages (e.g. systemd).
+          Options related to command completion configuration.
         '';
-        type = types.bool;
       };
 
       enableAutosuggestions = mkOption {
@@ -394,7 +413,7 @@ in
 
     {
       home.packages = with pkgs; [ zsh ]
-        ++ optional cfg.enableCompletion nix-zsh-completions
+        ++ optional cfg.completion.enable nix-zsh-completions
         ++ optional cfg.oh-my-zsh.enable oh-my-zsh;
 
       home.file."${relToDotDir ".zshrc"}".text = ''
@@ -427,9 +446,15 @@ in
         # Oh-My-Zsh calls compinit during initialization,
         # calling it twice causes sight start up slowdown
         # as all $fpath entries will be traversed again.
-        ${optionalString (cfg.enableCompletion && !cfg.oh-my-zsh.enable)
-          "autoload -U compinit && compinit"
-        }
+        ${optionalString (cfg.completion.enable && !cfg.oh-my-zsh.enable) ''
+          ${if cfg.completion.path != null
+            then ''
+              # compinit directory must exist
+              mkdir -p "$(dirname "${cfg.completion.path}")"
+              autoload -U compinit && compinit -d "${cfg.completion.path}"
+            ''
+            else "autoload -U compinit && compinit"}
+        ''}
 
         ${optionalString cfg.enableAutosuggestions
           "source ${pkgs.zsh-autosuggestions}/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
@@ -497,7 +522,7 @@ in
     (mkIf (cfg.plugins != []) {
       # Many plugins require compinit to be called
       # but allow the user to opt out.
-      programs.zsh.enableCompletion = mkDefault true;
+      programs.zsh.completion.enable = mkDefault true;
 
       home.file =
         foldl' (a: b: a // b) {}
