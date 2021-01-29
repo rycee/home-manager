@@ -1897,6 +1897,13 @@ in
           A new module is available: 'programs.exa'.
         '';
       }
+
+      {
+        time = "2021-04-17T14:05:37+00:00";
+        message = ''
+          A new option is available: 'programs.emacs.extraConfig'.
+        '';
+      }
     ];
   };
 }

@@ -13,6 +13,11 @@ let
 
   emacsWithPackages = emacsPackages.emacsWithPackages;
 
+  createConfPackage = epkgs:
+    epkgs.trivialBuild {
+      pname = "default";
+      src = pkgs.writeText "default.el" cfg.extraConfig;
+    };
 in {
   meta.maintainers = [ maintainers.rycee ];
 
@@ -26,6 +31,22 @@ in {
         defaultText = literalExample "pkgs.emacs";
         example = literalExample "pkgs.emacs25-nox";
         description = "The Emacs package to use.";
+      };
+
+      # NOTE: The config is placed in default.el instead of ~/.emacs.d so that
+      # it won't conflict with Emacs configuration frameworks. Users of these
+      # frameworks would still benefit from this option as it would easily allow
+      # them to have Nix-computed paths in their configuration.
+      extraConfig = mkOption {
+        type = types.lines;
+        default = "";
+        example = ''
+          (setq standard-indent 2)
+        '';
+        description = ''
+          Configuration to include in the Emacs
+          <link xlink:href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Init-File.html">default init file</link>.
+        '';
       };
 
       extraPackages = mkOption {
@@ -68,6 +89,10 @@ in {
 
   config = mkIf cfg.enable {
     home.packages = [ cfg.finalPackage ];
-    programs.emacs.finalPackage = emacsWithPackages cfg.extraPackages;
+    programs.emacs = {
+      finalPackage = emacsWithPackages cfg.extraPackages;
+      extraPackages = epkgs:
+        optional (cfg.extraConfig != "") (createConfPackage epkgs);
+    };
   };
 }
