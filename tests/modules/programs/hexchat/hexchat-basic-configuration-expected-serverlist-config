@@ -1,0 +1,24 @@
+
+N=efnet
+L=
+F=4
+S=irc.choopa.net
+S=irc.colosolutions.net
+S=irc.mzima.net
+S=irc.prison.net
+J=#computers
+
+N=freenode
+L=6
+E=UTF-8 (Unicode)
+F=12
+I=user
+i=user_
+R=real_user
+U=user
+P=password
+S=chat.freenode.net
+S=irc.freenode.net
+J=#home-manager
+J=#nixos
+

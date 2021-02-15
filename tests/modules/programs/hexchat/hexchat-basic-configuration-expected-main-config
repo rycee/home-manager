@@ -1,0 +1,10 @@
+dcc_dir = /home/user/Downloads
+gui_quit_dialog = 0
+gui_slist_skip = 1
+irc_nick1 = user
+irc_nick2 = user_
+irc_nick3 = user__
+irc_real_name = real user
+irc_user_name = user
+text_font = Monospace 14
+text_font_main = Monospace 14
