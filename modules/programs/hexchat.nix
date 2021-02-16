@@ -3,7 +3,7 @@ with builtins;
 with lib;
 let cfg = config.programs.hexchat;
 in {
-  meta.maintainers = [ maintainers.superherointj ];
+  meta.maintainers = with maintainers; [ superherointj thiagokokada ];
 
   options.programs.hexchat = with types; {
     channels = let
