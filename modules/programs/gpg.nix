@@ -17,6 +17,46 @@ let
   } cfg.settings;
 
   primitiveType = types.oneOf [ types.str types.bool ];
+
+  keyfileOpts = { config, ...}: {
+    options = {
+      text = mkOption {
+        type = types.nullOr types.lines;
+        description = ''
+          Text of a gpg public key
+        '';
+        default = null;
+      };
+      source = mkOption {
+        type = types.path;
+        description = ''
+          Path of a gpg public key file
+        '';
+      };
+    };
+    config = {
+      source = mkIf (config.text != null)
+        (pkgs.writeText "gpg-pubkeys" config.text);
+    };
+  };
+
+  keyringFiles = pkgs.runCommand "gpg-pubring" {
+      buildInputs = [ pkgs.gnupg ];
+    } ''
+    HOME="/build"
+    mkdir /build/.gnupg
+    chmod 700 /build/.gnupg
+    gpg-agent --daemon
+    ${concatMapStrings
+      ({source, ...}: ''
+        gpg --import ${source}
+      ''
+      )
+      cfg.keyfiles
+    }
+    mkdir $out
+    cp /build/.gnupg/{pubring.kbx} $out
+  '';
 in
 {
   options.programs.gpg = {
@@ -37,9 +77,24 @@ in
       '';
     };
 
+    mutableKeys = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        If set to <literal>true</literal>, you may manage your keyring
+        as a user using the <literal>gpg</literal> command. Upon activation,
+        the keyring will have managed keys added without overwriting unmanaged keys.
+
+        If set to <literal>false</literal>, the <literal>.gnupg/pubring.kbx</literal>
+        will become an immutable link to the nix store, denying modifications.
+      '';
+    };
+
     keyfiles = mkOption {
-      type = types.listOf types.path;
-      example = [ ./pubkeys.txt ];
+      type = types.listOf (types.submodule keyfileOpts);
+      example = literalExample ''
+        [ { source = ./pubkeys.txt; } ]
+      '';
       default = [ ];
       description = ''
         A list of keyfiles to be imported into GnuPG. These keyfiles
@@ -74,14 +129,21 @@ in
 
     home.file.".gnupg/gpg.conf".text = cfgText;
 
+    # Link keyring if keys are not mutable
+    home.file.".gnupg/pubring.kbx".source = mkIf
+      (!cfg.mutableKeys && cfg.keyfiles != [])
+      "${keyringFiles}/pubring.kbx";
+
     home.activation = mkIf (cfg.keyfiles != []) {
-      importGgpKeys = dag.entryAfter ["linkGeneration"] (
-        let
-          importKey = keyfile: ''
-            ${pkgs.gnupg}/bin/gpg --import ${lib.escapeShellArg (builtins.toString (pkgs.copyPathToStore keyfile))}
-          '';
-        in
-          lib.concatMapStrings (x: importKey x) cfg.keyfiles
+      # Import at activation time if mutable keys
+      importGpgKeys = optionalString cfg.mutableKeys (
+        dag.entryAfter ["linkGeneration"] (
+          lib.concatMapStrings
+            ({source, ...}: ''
+              ${pkgs.gnupg}/bin/gpg --import ${source}
+            '')
+            cfg.keyfiles
+        )
       );
     };
   };
