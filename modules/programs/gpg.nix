@@ -33,6 +33,10 @@ let
           Path of a gpg public key file
         '';
       };
+      trust = mkOption {
+        type = types.nullOr (types.enum [ 1 2 3 4 5 ]);
+        default = null;
+      };
     };
     config = {
       source = mkIf (config.text != null)
@@ -48,14 +52,26 @@ let
     chmod 700 /build/.gnupg
     gpg-agent --daemon
     ${concatMapStrings
-      ({source, ...}: ''
+      ({source, trust, ...}: ''
         gpg --import ${source}
-      ''
+      '' + (optionalString (trust != null) ''
+        ID="$(gpg --show-key ${source} |\
+            awk '
+                /pub/ {sub(".*0x","",$2); print $2}
+            ')"
+        if [ -n "$ID" ] ; then
+            echo -e 'trust\n${toString trust}\ny\nquit' |\
+                gpg --no-tty --command-fd 0 --edit-key "$ID"
+        fi
+      '')
       )
       cfg.keyfiles
     }
     mkdir $out
-    cp /build/.gnupg/{pubring.kbx} $out
+    cp /build/.gnupg/pubring.kbx $out/pubring.kbx
+    if [ -e /build/.gnupg/trustdb.gpg ] ; then
+      cp /build/.gnupg/trustdb.gpg $out/trustdb.gpg
+    fi
   '';
 in
 {
@@ -87,6 +103,20 @@ in
 
         If set to <literal>false</literal>, the <literal>.gnupg/pubring.kbx</literal>
         will become an immutable link to the nix store, denying modifications.
+      '';
+    };
+
+    mutableTrust = mkOption {
+      type = types.bool;
+      default = true;
+      description = ''
+        If set to <literal>true</literal>, you may manage trust as a user
+        using the <literal>gpg</literal> command. Upon activation, trusted
+        keys have their trust set without overwriting unmanaged keys.
+
+        If set to <literal>false</literal>, the <literal>.gnupg/trustdb.gpg</literal>
+        will be overwritten on each activation, removing trust for any
+        unmanaged keys.
       '';
     };
 
@@ -135,13 +165,34 @@ in
       "${keyringFiles}/pubring.kbx";
 
     home.activation = mkIf (cfg.keyfiles != []) {
-      # Import at activation time if mutable keys
-      importGpgKeys = optionalString cfg.mutableKeys (
+      importGpgKeys = (
         dag.entryAfter ["linkGeneration"] (
           lib.concatMapStrings
-            ({source, ...}: ''
-              ${pkgs.gnupg}/bin/gpg --import ${source}
-            '')
+            ({source, trust, ...}: concatStrings [
+
+              # Import mutable keys
+              (optionalString cfg.mutableKeys ''
+                ${pkgs.gnupg}/bin/gpg --import ${source}
+              '')
+
+              # Import mutable trust
+              (optionalString (trust != null && cfg.mutableTrust) ''
+                ID="$(${pkgs.gnupg}/bin/gpg --show-key "${source}" |\
+                    awk '
+                        /pub/ {sub(".*0x","",$2); print $2}
+                    ')"
+                if [ -n "$ID" ] ; then
+                    echo -e 'trust\n${toString trust}\ny\nquit' |\
+                        ${pkgs.gnupg}/bin/gpg --no-tty --command-fd 0 --edit-key "$ID"
+                fi
+              '')
+
+              # Copy immutable trust
+              (optionalString (trust != null && !cfg.mutableTrust) ''
+                install -m 0700 ${keyringFiles}/trustdb.gpg "$HOME/.gnupg/trustdb.gpg"
+              '')
+
+            ])
             cfg.keyfiles
         )
       );
