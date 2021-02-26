@@ -160,9 +160,10 @@ in
     home.file.".gnupg/gpg.conf".text = cfgText;
 
     # Link keyring if keys are not mutable
-    home.file.".gnupg/pubring.kbx".source = mkIf
-      (!cfg.mutableKeys && cfg.keyfiles != [])
-      "${keyringFiles}/pubring.kbx";
+    home.file.".gnupg/pubring.kbx" = mkIf
+      (!cfg.mutableKeys && cfg.keyfiles != []) {
+        source = "${keyringFiles}/pubring.kbx";
+      };
 
     home.activation = mkIf (cfg.keyfiles != []) {
       importGpgKeys = (
