@@ -49,14 +49,8 @@ let
 in {
   meta.maintainers = [ maintainers.tadfisher ];
 
-  options = {
-    services.lieer.enable =
-      mkEnableOption "lieer Gmail synchronization service";
-
-    accounts.email.accounts = mkOption {
-      type = with types; attrsOf (submodule (import ./lieer-accounts.nix));
-    };
-  };
+  options.services.lieer.enable =
+    mkEnableOption "lieer Gmail synchronization service";
 
   config = mkIf cfg.enable {
     programs.lieer.enable = true;

@@ -1,1 +1,18 @@
-{"account":"hm@example.com","drop_non_existing_label":false,"ignore_remote_labels":["CATEGORY_FORUMS","CATEGORY_PROMOTIONS","CATEGORY_UPDATES","CATEGORY_SOCIAL","CATEGORY_PERSONAL"],"ignore_tags":[],"replace_slash_with_dot":false,"timeout":0}
+{
+  "account": "hm@example.com",
+  "drop_non_existing_label": false,
+  "file_extension": "",
+  "ignore_empty_history": false,
+  "ignore_remote_labels": [
+    "CATEGORY_FORUMS",
+    "CATEGORY_PROMOTIONS",
+    "CATEGORY_UPDATES",
+    "CATEGORY_SOCIAL",
+    "CATEGORY_PERSONAL"
+  ],
+  "ignore_tags": [],
+  "local_trash_tag": "trash",
+  "remove_local_messages": true,
+  "replace_slash_with_dot": false,
+  "timeout": 600
+}

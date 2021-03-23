@@ -7,6 +7,7 @@ with lib;
 
   config = {
     programs.lieer.enable = true;
+    programs.lieer.package = pkgs.writeScriptBin "dummy-gmailieer" "";
 
     accounts.email.accounts."hm@example.com" = {
       flavor = "gmail.com";
@@ -14,14 +15,11 @@ with lib;
       notmuch.enable = true;
     };
 
-    nixpkgs.overlays = [
-      (self: super: { gmailieer = pkgs.writeScriptBin "dummy-gmailieer" ""; })
-    ];
-
     nmt.script = ''
       assertFileExists home-files/Mail/hm@example.com/.gmailieer.json
-      assertFileContent home-files/Mail/hm@example.com/.gmailieer.json \
-                        ${./lieer-expected.json}
+      assertFileContent home-files/Mail/hm@example.com/.gmailieer.json ${
+        ./lieer-expected.json
+      }
     '';
   };
 }
