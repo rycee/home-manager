@@ -18,17 +18,35 @@ jobs:
           install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210415_76980a1/install
           extra_nix_config: |
             experimental-features = nix-command flakes
-      - name: Update & commit lockfile
+      - name: Prepare flakebot branch
         run: |
           git config --local user.email "flakebot@users.noreply.github.com"
           git config --local user.name "flakebot"
+          git checkout -B flake-update
+      - name: Update & commit lockfile
+        run: |
           nix flake update --commit-lock-file
-      - name: Check home-manager script
-        run: nix run . -- help
+          echo "commit_info<<EOF" >> $GITHUB_ENV
+          git log --format=%B -1 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Push changes
         uses: ad-m/github-push-action@master
         with:
           # Use a custom token so we can trigger other workflows upon push to master
           github_token: ${{ secrets.FLAKEBOT_TOKEN }}
-          branch: master
+          branch: flake-update
           force: true
+      - name: pull-request-action
+        uses: vsoch/pull-request-action@1.0.15
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLAKEBOT_TOKEN }}
+          PULL_REQUEST_FROM_BRANCH: flake-update
+          PULL_REQUEST_BRANCH: master
+          PULL_REQUEST_UPDATE: true
+          PASS_ON_ERROR: true
+          PULL_REQUEST_TITLE: Update flake inputs
+          PULL_REQUEST_BODY: |
+            This is an automated pull request to update this flake's inputs.
+            ```
+            ${{ env.commit_info }}
+            ```
