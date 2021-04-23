@@ -331,10 +331,7 @@ as follows:
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    }
+    home-manager.url = "github:nix-community/home-manager";
   };
 
   outputs = { home-manager, nixpkgs, ... }: {
@@ -356,9 +353,9 @@ as follows:
 }
 ```
 
-Note that the `nixpkgs` input to the `home-manager` flake is overridden with
-the flake's `nixpkgs` input. The Home Manager library is exported by the flake
-under `lib.hm`.
+Note that the `home-manager` uses its own nixpkgs input, which is updated
+periodically. See the wiki for more details.
+The Home Manager library is exported by the flake under `lib.hm`.
 
 When using flakes, switch to new configurations as you do for the
 whole system (e. g. `nixos-rebuild switch --flake <path>`) instead of
