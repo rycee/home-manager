@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ pkgs ? import <nixpkgs> {}, skipBig ? true }:
 
 let
 
@@ -115,5 +115,7 @@ import nmt {
     ./modules/services/wlsunset
     ./modules/systemd
     ./modules/targets-linux
+  ] ++ lib.optionals (!skipBig) [
+    ./modules/programs/emacs
   ]);
 }
