@@ -8,9 +8,7 @@ let
 
   docs = import ../doc { inherit lib pkgs; };
 
-in
-
-{
+in {
   options = {
     manual.html.enable = mkOption {
       type = types.bool;

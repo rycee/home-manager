@@ -9,9 +9,10 @@ let
   isPath = x: builtins.substring 0 1 (toString x) == "/";
 
   addressPort = entry:
-    if isPath entry.address
-    then " ${entry.address}"
-    else " [${entry.address}]:${toString entry.port}";
+    if isPath entry.address then
+      " ${entry.address}"
+    else
+      " [${entry.address}]:${toString entry.port}";
 
   yn = flag: if flag then "yes" else "no";
 
@@ -33,9 +34,7 @@ let
     };
   };
 
-  dynamicForwardModule = types.submodule {
-    options = bindOptions;
-  };
+  dynamicForwardModule = types.submodule { options = bindOptions; };
 
   forwardModule = types.submodule {
     options = {
@@ -116,11 +115,8 @@ let
 
       identityFile = mkOption {
         type = with types; either (listOf str) (nullOr str);
-        default = [];
-        apply = p:
-          if p == null then []
-          else if isString p then [p]
-          else p;
+        default = [ ];
+        apply = p: if p == null then [ ] else toList p;
         description = ''
           Specifies files from which the user identity is read.
           Identities will be tried in the given order.
@@ -157,7 +153,7 @@ let
 
       sendEnv = mkOption {
         type = types.listOf types.str;
-        default = [];
+        default = [ ];
         description = ''
           Environment variables to send from the local host to the
           server.
@@ -196,11 +192,8 @@ let
 
       certificateFile = mkOption {
         type = with types; either (listOf str) (nullOr str);
-        default = [];
-        apply = p:
-          if p == null then []
-          else if isString p then [p]
-          else p;
+        default = [ ];
+        apply = p: if p == null then [ ] else toList p;
         description = ''
           Specifies files from which the user certificate is read.
         '';
@@ -208,7 +201,7 @@ let
 
       addressFamily = mkOption {
         default = null;
-        type = types.nullOr (types.enum ["any" "inet" "inet6"]);
+        type = types.nullOr (types.enum [ "any" "inet" "inet6" ]);
         description = ''
           Specifies which address family to use when connecting.
         '';
@@ -216,7 +209,7 @@ let
 
       localForwards = mkOption {
         type = types.listOf forwardModule;
-        default = [];
+        default = [ ];
         example = literalExample ''
           [
             {
@@ -237,7 +230,7 @@ let
 
       remoteForwards = mkOption {
         type = types.listOf forwardModule;
-        default = [];
+        default = [ ];
         example = literalExample ''
           [
             {
@@ -258,7 +251,7 @@ let
 
       dynamicForwards = mkOption {
         type = types.listOf dynamicForwardModule;
-        default = [];
+        default = [ ];
         example = literalExample ''
           [ { port = 8080; } ];
         '';
@@ -273,7 +266,7 @@ let
 
       extraOptions = mkOption {
         type = types.attrsOf types.str;
-        default = {};
+        default = { };
         description = "Extra configuration options for the host.";
       };
     };
@@ -281,36 +274,37 @@ let
     config.host = mkDefault dagName;
   });
 
-  matchBlockStr = cf: concatStringsSep "\n" (
-    ["Host ${cf.host}"]
-    ++ optional (cf.port != null)            "  Port ${toString cf.port}"
-    ++ optional (cf.forwardAgent != null)    "  ForwardAgent ${yn cf.forwardAgent}"
-    ++ optional cf.forwardX11                "  ForwardX11 yes"
-    ++ optional cf.forwardX11Trusted         "  ForwardX11Trusted yes"
-    ++ optional cf.identitiesOnly            "  IdentitiesOnly yes"
-    ++ optional (cf.user != null)            "  User ${cf.user}"
-    ++ optional (cf.hostname != null)        "  HostName ${cf.hostname}"
-    ++ optional (cf.addressFamily != null)   "  AddressFamily ${cf.addressFamily}"
-    ++ optional (cf.sendEnv != [])           "  SendEnv ${unwords cf.sendEnv}"
-    ++ optional (cf.serverAliveInterval != 0)
-      "  ServerAliveInterval ${toString cf.serverAliveInterval}"
-    ++ optional (cf.serverAliveCountMax != 3)
-      "  ServerAliveCountMax ${toString cf.serverAliveCountMax}"
-    ++ optional (cf.compression != null)     "  Compression ${yn cf.compression}"
-    ++ optional (!cf.checkHostIP)            "  CheckHostIP no"
-    ++ optional (cf.proxyCommand != null)    "  ProxyCommand ${cf.proxyCommand}"
-    ++ optional (cf.proxyJump != null)       "  ProxyJump ${cf.proxyJump}"
-    ++ map (file: "  IdentityFile ${file}") cf.identityFile
-    ++ map (file: "  CertificateFile ${file}") cf.certificateFile
-    ++ map (f: "  LocalForward" + addressPort f.bind + addressPort f.host) cf.localForwards
-    ++ map (f: "  RemoteForward" + addressPort f.bind + addressPort f.host) cf.remoteForwards
-    ++ map (f: "  DynamicForward" + addressPort f) cf.dynamicForwards
-    ++ mapAttrsToList (n: v: "  ${n} ${v}") cf.extraOptions
-  );
+  matchBlockStr = cf:
+    concatStringsSep "\n" ([ "Host ${cf.host}" ]
+      ++ optional (cf.port != null) "  Port ${toString cf.port}"
+      ++ (optional (cf.forwardAgent != null)
+        "  ForwardAgent ${yn cf.forwardAgent}")
+      ++ optional cf.forwardX11 "  ForwardX11 yes"
+      ++ optional cf.forwardX11Trusted "  ForwardX11Trusted yes"
+      ++ optional cf.identitiesOnly "  IdentitiesOnly yes"
+      ++ optional (cf.user != null) "  User ${cf.user}"
+      ++ optional (cf.hostname != null) "  HostName ${cf.hostname}"
+      ++ (optional (cf.addressFamily != null)
+        "  AddressFamily ${cf.addressFamily}")
+      ++ optional (cf.sendEnv != [ ]) "  SendEnv ${unwords cf.sendEnv}"
+      ++ (optional (cf.serverAliveInterval != 0)
+        "  ServerAliveInterval ${toString cf.serverAliveInterval}")
+      ++ (optional (cf.serverAliveCountMax != 3)
+        "  ServerAliveCountMax ${toString cf.serverAliveCountMax}")
+      ++ optional (cf.compression != null) "  Compression ${yn cf.compression}"
+      ++ optional (!cf.checkHostIP) "  CheckHostIP no"
+      ++ optional (cf.proxyCommand != null) "  ProxyCommand ${cf.proxyCommand}"
+      ++ optional (cf.proxyJump != null) "  ProxyJump ${cf.proxyJump}"
+      ++ map (file: "  IdentityFile ${file}") cf.identityFile
+      ++ map (file: "  CertificateFile ${file}") cf.certificateFile
+      ++ (map (f: "  LocalForward" + addressPort f.bind + addressPort f.host)
+        cf.localForwards)
+      ++ (map (f: "  RemoteForward" + addressPort f.bind + addressPort f.host)
+        cf.remoteForwards)
+      ++ map (f: "  DynamicForward" + addressPort f) cf.dynamicForwards
+      ++ mapAttrsToList (n: v: "  ${n} ${v}") cf.extraOptions);
 
-in
-
-{
+in {
   meta.maintainers = [ maintainers.rycee ];
 
   options.programs.ssh = {
@@ -374,7 +368,7 @@ in
 
     controlMaster = mkOption {
       default = "no";
-      type = types.enum ["yes" "no" "ask" "auto" "autoask"];
+      type = types.enum [ "yes" "no" "ask" "auto" "autoask" ];
       description = ''
         Configure sharing of multiple sessions over a single network connection.
       '';
@@ -407,7 +401,7 @@ in
 
     extraOptionOverrides = mkOption {
       type = types.attrsOf types.str;
-      default = {};
+      default = { };
       description = ''
         Extra SSH configuration options that take precedence over any
         host specific configuration.
@@ -416,7 +410,7 @@ in
 
     matchBlocks = mkOption {
       type = hm.types.listOrDagOf matchBlockModule;
-      default = {};
+      default = { };
       example = literalExample ''
         {
           "john.example.com" = {
@@ -445,38 +439,39 @@ in
   };
 
   config = mkIf cfg.enable {
-    assertions = [
-      {
-        assertion =
-          let
-            # `builtins.any`/`lib.lists.any` does not return `true` if there are no elements.
-            any' = pred: items: if items == [] then true else any pred items;
-            # Check that if `entry.address` is defined, and is a path, that `entry.port` has not
-            # been defined.
-            noPathWithPort =  entry: entry.address != null && isPath entry.address -> entry.port == null;
-            checkDynamic = block: any' noPathWithPort block.dynamicForwards;
-            checkBindAndHost = fwd: noPathWithPort fwd.bind && noPathWithPort fwd.host;
-            checkLocal = block: any' checkBindAndHost block.localForwards;
-            checkRemote = block: any' checkBindAndHost block.remoteForwards;
-            checkMatchBlock = block: all (fn: fn block) [ checkLocal checkRemote checkDynamic ];
-          in any' checkMatchBlock (map (block: block.data) (builtins.attrValues cfg.matchBlocks));
-        message = "Forwarded paths cannot have ports.";
-      }
-    ];
+    assertions = [{
+      assertion = let
+        # `builtins.any`/`lib.lists.any` does not return `true` if there are no elements.
+        any' = pred: items: (items == [ ]) || any pred items;
+        # Check that if `entry.address` is defined, and is a path, that `entry.port` has not
+        # been defined.
+        noPathWithPort = entry:
+          entry.address != null && isPath entry.address -> entry.port == null;
+        checkDynamic = block: any' noPathWithPort block.dynamicForwards;
+        checkBindAndHost = fwd:
+          noPathWithPort fwd.bind && noPathWithPort fwd.host;
+        checkLocal = block: any' checkBindAndHost block.localForwards;
+        checkRemote = block: any' checkBindAndHost block.remoteForwards;
+        checkMatchBlock = block:
+          all (fn: fn block) [ checkLocal checkRemote checkDynamic ];
+      in any' checkMatchBlock
+      (map (block: block.data) (builtins.attrValues cfg.matchBlocks));
+      message = "Forwarded paths cannot have ports.";
+    }];
 
-    home.file.".ssh/config".text =
-      let
-        sortedMatchBlocks = hm.dag.topoSort cfg.matchBlocks;
-        sortedMatchBlocksStr = builtins.toJSON sortedMatchBlocks;
-        matchBlocks =
-          if sortedMatchBlocks ? result
-          then sortedMatchBlocks.result
-          else abort "Dependency cycle in SSH match blocks: ${sortedMatchBlocksStr}";
-      in ''
-      ${concatStringsSep "\n" (
-        mapAttrsToList (n: v: "${n} ${v}") cfg.extraOptionOverrides)}
+    home.file.".ssh/config".text = let
+      sortedMatchBlocks = hm.dag.topoSort cfg.matchBlocks;
+      sortedMatchBlocksStr = builtins.toJSON sortedMatchBlocks;
+      matchBlocks = if sortedMatchBlocks ? result then
+        sortedMatchBlocks.result
+      else
+        abort "Dependency cycle in SSH match blocks: ${sortedMatchBlocksStr}";
+    in ''
+      ${concatStringsSep "\n"
+      (mapAttrsToList (n: v: "${n} ${v}") cfg.extraOptionOverrides)}
 
-      ${concatStringsSep "\n\n" (map (block: matchBlockStr block.data) matchBlocks)}
+      ${concatStringsSep "\n\n"
+      (map (block: matchBlockStr block.data) matchBlocks)}
 
       Host *
         ForwardAgent ${yn cfg.forwardAgent}
@@ -489,7 +484,7 @@ in
         ControlPath ${cfg.controlPath}
         ControlPersist ${cfg.controlPersist}
 
-        ${replaceStrings ["\n"] ["\n  "] cfg.extraConfig}
+        ${replaceStrings [ "\n" ] [ "\n  " ] cfg.extraConfig}
     '';
   };
 }

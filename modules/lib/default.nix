@@ -1,20 +1,17 @@
 { lib }:
 
 rec {
-  dag =
-    let
-      d = import ./dag.nix { inherit lib; };
-    in
-      {
-        empty = d.emptyDag;
-        isDag = d.isDag;
-        topoSort = d.dagTopoSort;
-        map = d.dagMap;
-        entryAnywhere = d.dagEntryAnywhere;
-        entryBetween = d.dagEntryBetween;
-        entryAfter = d.dagEntryAfter;
-        entryBefore = d.dagEntryBefore;
-      };
+  dag = let d = import ./dag.nix { inherit lib; };
+  in {
+    empty = d.emptyDag;
+    isDag = d.isDag;
+    topoSort = d.dagTopoSort;
+    map = d.dagMap;
+    entryAnywhere = d.dagEntryAnywhere;
+    entryBetween = d.dagEntryBetween;
+    entryAfter = d.dagEntryAfter;
+    entryBefore = d.dagEntryBefore;
+  };
 
   gvariant = import ./gvariant.nix { inherit lib; };
   maintainers = import ./maintainers.nix;

@@ -11,16 +11,14 @@ with lib;
   # Arguments:
   #   - basePathDesc   docbook compatible description of the base path
   #   - basePath       the file base path
-  fileType = basePathDesc: basePath: types.attrsOf (types.submodule (
-    { name, config, ... }: {
+  fileType = basePathDesc: basePath:
+    types.attrsOf (types.submodule ({ name, config, ... }: {
       options = {
         target = mkOption {
           type = types.str;
           apply = p:
-            let
-              absPath = if hasPrefix "/" p then p else "${basePath}/${p}";
-            in
-              removePrefix (homeDirectory + "/") absPath;
+            let absPath = if hasPrefix "/" p then p else "${basePath}/${p}";
+            in removePrefix (homeDirectory + "/") absPath;
           defaultText = literalExample "<name>";
           description = ''
             Path to target file relative to ${basePathDesc}.
@@ -100,13 +98,10 @@ with lib;
 
       config = {
         target = mkDefault name;
-        source = mkIf (config.text != null) (
-          mkDefault (pkgs.writeTextFile {
-            inherit (config) executable text;
-            name = hm.strings.storeFileName name;
-          })
-        );
+        source = mkIf (config.text != null) (mkDefault (pkgs.writeTextFile {
+          inherit (config) executable text;
+          name = hm.strings.storeFileName name;
+        }));
       };
-    }
-  ));
+    }));
 }

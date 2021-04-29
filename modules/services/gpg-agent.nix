@@ -12,34 +12,32 @@ let
   gpgInitStr = ''
     GPG_TTY="$(tty)"
     export GPG_TTY
-  ''
-  + optionalString cfg.enableSshSupport
-      "${gpgPkg}/bin/gpg-connect-agent updatestartuptty /bye > /dev/null";
+  '' + optionalString cfg.enableSshSupport
+    "${gpgPkg}/bin/gpg-connect-agent updatestartuptty /bye > /dev/null";
 
   # mimic `gpgconf` output for use in `systemd` unit definitions.
   # we cannot use `gpgconf` directly because it heavily depends on system
   # state, but we need the values at build time. original:
   # https://github.com/gpg/gnupg/blob/c6702d77d936b3e9d91b34d8fdee9599ab94ee1b/common/homedir.c#L672-L681
-  gpgconf = dir: let
-    f = pkgs.runCommand dir {} ''
-      PATH=${pkgs.coreutils}/bin:${pkgs.xxd}/bin:$PATH
+  gpgconf = dir:
+    let
+      f = pkgs.runCommand dir { } ''
+        PATH=${pkgs.coreutils}/bin:${pkgs.xxd}/bin:$PATH
 
-      if [[ ${homedir} = ${options.programs.gpg.homedir.default} ]]
-      then
-        echo -n "%t/gnupg/${dir}" > $out
-      else
-        hash=$(echo -n ${homedir} | sha1sum -b | xxd -r -p | base32 | \
-               cut -c -24 | tr '[:upper:]' '[:lower:]' | \
-               tr abcdefghijklmnopqrstuvwxyz234567 \
-                  ybndrfg8ejkmcpqxot1uwisza345h769)
-         echo -n "%t/gnupg/d.$hash/${dir}" > $out
-      fi
-    '';
+        if [[ ${homedir} = ${options.programs.gpg.homedir.default} ]]
+        then
+          echo -n "%t/gnupg/${dir}" > $out
+        else
+          hash=$(echo -n ${homedir} | sha1sum -b | xxd -r -p | base32 | \
+                 cut -c -24 | tr '[:upper:]' '[:lower:]' | \
+                 tr abcdefghijklmnopqrstuvwxyz234567 \
+                    ybndrfg8ejkmcpqxot1uwisza345h769)
+           echo -n "%t/gnupg/d.$hash/${dir}" > $out
+        fi
+      '';
     in "${builtins.readFile f}";
 
-in
-
-{
+in {
   meta.maintainers = [ maintainers.rycee ];
 
   options = {
@@ -178,35 +176,25 @@ in
 
   config = mkIf cfg.enable (mkMerge [
     {
-      home.file."${homedir}/gpg-agent.conf".text = concatStringsSep "\n" (
-        optional (cfg.enableSshSupport) "enable-ssh-support"
-        ++
-        optional (!cfg.grabKeyboardAndMouse) "no-grab"
-        ++
-        optional (!cfg.enableScDaemon) "disable-scdaemon"
-        ++
-        optional (cfg.defaultCacheTtl != null)
-          "default-cache-ttl ${toString cfg.defaultCacheTtl}"
-        ++
-        optional (cfg.defaultCacheTtlSsh != null)
-          "default-cache-ttl-ssh ${toString cfg.defaultCacheTtlSsh}"
-        ++
-        optional (cfg.maxCacheTtl != null)
-          "max-cache-ttl ${toString cfg.maxCacheTtl}"
-        ++
-        optional (cfg.maxCacheTtlSsh != null)
-          "max-cache-ttl-ssh ${toString cfg.maxCacheTtlSsh}"
-        ++
-        optional (cfg.pinentryFlavor != null)
-          "pinentry-program ${pkgs.pinentry.${cfg.pinentryFlavor}}/bin/pinentry"
-        ++
-        [ cfg.extraConfig ]
-      );
+      home.file."${homedir}/gpg-agent.conf".text = concatStringsSep "\n"
+        (optional (cfg.enableSshSupport) "enable-ssh-support"
+          ++ optional (!cfg.grabKeyboardAndMouse) "no-grab"
+          ++ optional (!cfg.enableScDaemon) "disable-scdaemon"
+          ++ (optional (cfg.defaultCacheTtl != null)
+            "default-cache-ttl ${toString cfg.defaultCacheTtl}")
+          ++ (optional (cfg.defaultCacheTtlSsh != null)
+            "default-cache-ttl-ssh ${toString cfg.defaultCacheTtlSsh}")
+          ++ (optional (cfg.maxCacheTtl != null)
+            "max-cache-ttl ${toString cfg.maxCacheTtl}")
+          ++ (optional (cfg.maxCacheTtlSsh != null)
+            "max-cache-ttl-ssh ${toString cfg.maxCacheTtlSsh}")
+          ++ (optional (cfg.pinentryFlavor != null) "pinentry-program ${
+              pkgs.pinentry.${cfg.pinentryFlavor}
+            }/bin/pinentry") ++ [ cfg.extraConfig ]);
 
-      home.sessionVariables =
-        optionalAttrs cfg.enableSshSupport {
-          SSH_AUTH_SOCK = "$(${gpgPkg}/bin/gpgconf --list-dirs agent-ssh-socket)";
-        };
+      home.sessionVariables = optionalAttrs cfg.enableSshSupport {
+        SSH_AUTH_SOCK = "$(${gpgPkg}/bin/gpgconf --list-dirs agent-ssh-socket)";
+      };
 
       programs.bash.initExtra = gpgInitStr;
       programs.zsh.initExtra = gpgInitStr;
@@ -217,7 +205,8 @@ in
 
     (mkIf (cfg.sshKeys != null) {
       # Trailing newlines are important
-      home.file."${homedir}/sshcontrol".text = concatMapStrings (s: "${s}\n") cfg.sshKeys;
+      home.file."${homedir}/sshcontrol".text =
+        (concatStringsSep "\n" cfg.sshKeys) + "\n";
     })
 
     # The systemd units below are direct translations of the
@@ -258,9 +247,7 @@ in
           DirectoryMode = "0700";
         };
 
-        Install = {
-          WantedBy = [ "sockets.target" ];
-        };
+        Install.WantedBy = [ "sockets.target" ];
       };
     }
 
@@ -268,7 +255,8 @@ in
       systemd.user.sockets.gpg-agent-ssh = {
         Unit = {
           Description = "GnuPG cryptographic agent (ssh-agent emulation)";
-          Documentation = "man:gpg-agent(1) man:ssh-add(1) man:ssh-agent(1) man:ssh(1)";
+          Documentation =
+            "man:gpg-agent(1) man:ssh-add(1) man:ssh-agent(1) man:ssh(1)";
         };
 
         Socket = {
@@ -279,16 +267,15 @@ in
           DirectoryMode = "0700";
         };
 
-        Install = {
-          WantedBy = [ "sockets.target" ];
-        };
+        Install.WantedBy = [ "sockets.target" ];
       };
     })
 
     (mkIf cfg.enableExtraSocket {
       systemd.user.sockets.gpg-agent-extra = {
         Unit = {
-          Description = "GnuPG cryptographic agent and passphrase cache (restricted)";
+          Description =
+            "GnuPG cryptographic agent and passphrase cache (restricted)";
           Documentation = "man:gpg-agent(1) man:ssh(1)";
         };
 
@@ -300,9 +287,7 @@ in
           DirectoryMode = "0700";
         };
 
-        Install = {
-          WantedBy = [ "sockets.target" ];
-        };
+        Install.WantedBy = [ "sockets.target" ];
       };
     })
   ]);

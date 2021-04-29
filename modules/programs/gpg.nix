@@ -6,9 +6,7 @@ let
   cfg = config.programs.gpg;
 
   mkKeyValue = key: value:
-    if isString value
-    then "${key} ${value}"
-    else optionalString value key;
+    if isString value then "${key} ${value}" else optionalString value key;
 
   cfgText = generators.toKeyValue {
     inherit mkKeyValue;
@@ -21,8 +19,7 @@ let
   } cfg.scdaemonSettings;
 
   primitiveType = types.oneOf [ types.str types.bool ];
-in
-{
+in {
   options.programs.gpg = {
     enable = mkEnableOption "GnuPG";
 
@@ -31,11 +28,13 @@ in
       default = pkgs.gnupg;
       defaultText = literalExample "pkgs.gnupg";
       example = literalExample "pkgs.gnupg23";
-      description = "The Gnupg package to use (also used the gpg-agent service).";
+      description =
+        "The Gnupg package to use (also used the gpg-agent service).";
     };
 
     settings = mkOption {
-      type = types.attrsOf (types.either primitiveType (types.listOf types.str));
+      type =
+        types.attrsOf (types.either primitiveType (types.listOf types.str));
       example = literalExample ''
         {
           no-comments = false;
@@ -50,7 +49,8 @@ in
     };
 
     scdaemonSettings = mkOption {
-      type = types.attrsOf (types.either primitiveType (types.listOf types.str));
+      type =
+        types.attrsOf (types.either primitiveType (types.listOf types.str));
       example = literalExample ''
         {
           disable-ccid = true;
@@ -65,9 +65,9 @@ in
 
     homedir = mkOption {
       type = types.path;
-      example = literalExample "\"\${config.xdg.dataHome}/gnupg\"";
+      example = literalExample ''"''${config.xdg.dataHome}/gnupg"'';
       default = "${config.home.homeDirectory}/.gnupg";
-      defaultText = literalExample "\"\${config.home.homeDirectory}/.gnupg\"";
+      defaultText = literalExample ''"''${config.home.homeDirectory}/.gnupg"'';
       description = "Directory to store keychains and configuration.";
     };
   };
@@ -77,7 +77,8 @@ in
       personal-cipher-preferences = mkDefault "AES256 AES192 AES";
       personal-digest-preferences = mkDefault "SHA512 SHA384 SHA256";
       personal-compress-preferences = mkDefault "ZLIB BZIP2 ZIP Uncompressed";
-      default-preference-list = mkDefault "SHA512 SHA384 SHA256 AES256 AES192 AES ZLIB BZIP2 ZIP Uncompressed";
+      default-preference-list = mkDefault
+        "SHA512 SHA384 SHA256 AES256 AES192 AES ZLIB BZIP2 ZIP Uncompressed";
       cert-digest-algo = mkDefault "SHA512";
       s2k-digest-algo = mkDefault "SHA512";
       s2k-cipher-algo = mkDefault "AES256";
@@ -99,9 +100,7 @@ in
     };
 
     home.packages = [ cfg.package ];
-    home.sessionVariables = {
-      GNUPGHOME = cfg.homedir;
-    };
+    home.sessionVariables = { GNUPGHOME = cfg.homedir; };
 
     home.file."${cfg.homedir}/gpg.conf".text = cfgText;
 

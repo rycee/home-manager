@@ -18,31 +18,19 @@ esac
 find . -name '*.nix' \
   ! -path ./modules/programs/irssi.nix \
   \
-  ! -path ./home-manager/home-manager.nix \
-  ! -path ./modules/default.nix \
   ! -path ./modules/files.nix \
   ! -path ./modules/home-environment.nix \
-  ! -path ./modules/lib/default.nix \
-  ! -path ./modules/lib/file-type.nix \
-  ! -path ./modules/manual.nix \
-  ! -path ./modules/misc/news.nix \
   ! -path ./modules/misc/nixpkgs.nix \
   ! -path ./modules/misc/xdg.nix \
   ! -path ./modules/modules.nix \
   ! -path ./modules/programs/bash.nix \
   ! -path ./modules/programs/firefox.nix \
-  ! -path ./modules/programs/gpg.nix \
-  ! -path ./modules/programs/ssh.nix \
   ! -path ./modules/programs/tmux.nix \
   ! -path ./modules/programs/zsh.nix \
-  ! -path ./modules/services/gpg-agent.nix \
   ! -path ./modules/services/mpd.nix \
   ! -path ./modules/services/sxhkd.nix \
   ! -path ./modules/systemd.nix \
-  ! -path ./nix-darwin/default.nix \
-  ! -path ./tests/default.nix \
   ! -path ./tests/modules/home-environment/session-variables.nix \
-  ! -path ./tests/modules/programs/gpg/override-defaults.nix \
   ! -path ./tests/modules/programs/zsh/session-variables.nix \
   ! -path ./tests/modules/services/sxhkd/service.nix \
   ! -path ./tests/modules/systemd/services.nix \

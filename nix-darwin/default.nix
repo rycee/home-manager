@@ -32,9 +32,7 @@ let
     ] ++ cfg.sharedModules;
   };
 
-in
-
-{
+in {
   options = {
     home-manager = {
       useUserPackages = mkEnableOption ''
@@ -84,7 +82,7 @@ in
 
       users = mkOption {
         type = types.attrsOf hmModule;
-        default = {};
+        default = { };
         # Set as not visible to prevent the entire submodule being included in
         # the documentation.
         visible = false;
@@ -95,41 +93,36 @@ in
     };
   };
 
-  config = mkIf (cfg.users != {}) {
-    warnings =
-      flatten (flip mapAttrsToList cfg.users (user: config:
-        flip map config.warnings (warning:
-          "${user} profile: ${warning}"
-        )
-      ));
+  config = mkIf (cfg.users != { }) {
+    warnings = flatten (flip mapAttrsToList cfg.users (user: config:
+      flip map config.warnings (warning: "${user} profile: ${warning}")));
 
-    assertions =
-      flatten (flip mapAttrsToList cfg.users (user: config:
-        flip map config.assertions (assertion:
-          {
-            inherit (assertion) assertion;
-            message = "${user} profile: ${assertion.message}";
-          }
-        )
-      ));
+    assertions = flatten (flip mapAttrsToList cfg.users (user: config:
+      flip map config.assertions (assertion: {
+        inherit (assertion) assertion;
+        message = "${user} profile: ${assertion.message}";
+      })));
 
-    users.users = mkIf cfg.useUserPackages (
-      mapAttrs (username: usercfg: {
-        packages = [ usercfg.home.path ];
-      }) cfg.users
-    );
+    users.users = mkIf cfg.useUserPackages
+      (mapAttrs (username: usercfg: { packages = [ usercfg.home.path ]; })
+        cfg.users);
 
     environment.pathsToLink = mkIf cfg.useUserPackages [ "/etc/profile.d" ];
 
-    system.activationScripts.postActivation.text =
-      concatStringsSep "\n" (mapAttrsToList (username: usercfg: ''
-        echo Activating home-manager configuration for ${username}
-        sudo -u ${username} -i ${pkgs.writeShellScript "activation-${username}" ''
-          ${lib.optionalString (cfg.backupFileExtension != null)
-            "export HOME_MANAGER_BACKUP_EXT=${lib.escapeShellArg cfg.backupFileExtension}"}
-          ${lib.optionalString cfg.verbose "export VERBOSE=1"}
-          exec ${usercfg.home.activationPackage}/activate
-        ''}
-      '') cfg.users);
+    system.activationScripts.postActivation.text = concatStringsSep "\n"
+      (mapAttrsToList (username: usercfg:
+        let
+          activationScript = pkgs.writeShellScript "activation-${username}" ''
+            ${lib.optionalString (cfg.backupFileExtension != null)
+            "export HOME_MANAGER_BACKUP_EXT=${
+              lib.escapeShellArg cfg.backupFileExtension
+            }"}
+            ${lib.optionalString cfg.verbose "export VERBOSE=1"}
+            exec ${usercfg.home.activationPackage}/activate
+          '';
+        in ''
+          echo Activating home-manager configuration for ${username}
+          sudo -u ${username} -i ${activationScript}
+        '') cfg.users);
   };
 }
