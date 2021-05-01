@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-        persist-credentials: false
-        fetch-depth: 0
+          persist-credentials: false
+          fetch-depth: 0
       - uses: cachix/install-nix-action@v13
         with:
           install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210415_76980a1/install
