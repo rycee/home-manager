@@ -30,6 +30,8 @@
 
 /modules/misc/vte.nix                                 @rycee
 
+/modules/misc/xdg-autostart.nix                       @jD91mZM2
+
 /modules/misc/xdg-mime-apps.nix                       @pacien
 
 /modules/misc/xdg-user-dirs.nix                       @pacien
