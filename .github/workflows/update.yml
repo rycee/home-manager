@@ -30,7 +30,7 @@ jobs:
           git log --format=%B -1 >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
       - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: ad-m/github-push-action@v0.6.0
         with:
           # Use a custom token so we can trigger other workflows upon push to master
           github_token: ${{ secrets.FLAKEBOT_TOKEN }}
