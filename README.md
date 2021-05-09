@@ -353,8 +353,8 @@ as follows:
 }
 ```
 
-Note that the `home-manager` uses its own nixpkgs input, which is updated
-periodically. See the wiki for more details.
+Note that `home-manager` uses its own nixpkgs input, which is updated
+periodically.
 The Home Manager library is exported by the flake under `lib.hm`.
 
 When using flakes, switch to new configurations as you do for the
