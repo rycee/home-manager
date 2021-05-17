@@ -43,6 +43,12 @@
     github = "kubukoz";
     githubId = 894884;
   };
+  l3af = {
+    name = "L3af";
+    email = "L3afMeAlon3@gmail.com";
+    github = "L3afMe";
+    githubId = 72546287;
+  };
   matrss = {
     name = "Matthias Riße";
     email = "matrss@users.noreply.github.com";

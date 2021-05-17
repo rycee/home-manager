@@ -166,6 +166,9 @@
 /modules/programs/waybar.nix                          @berbiche
 /tests/modules/programs/waybar                        @berbiche
 
+/modules/programs/wezterm.nix                         @L3afMe
+/tests/modules/programs/wezterm                       @L3afMe
+
 /modules/programs/z-lua.nix                           @marsam
 
 /modules/programs/zathura.nix                         @rprospero

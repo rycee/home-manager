@@ -1,0 +1,1 @@
+{ wezterm-everything = ./everything.nix; }

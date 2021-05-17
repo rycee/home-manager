@@ -79,6 +79,7 @@ import nmt {
     ./modules/programs/tmux
     ./modules/programs/topgrade
     ./modules/programs/vscode
+    ./modules/programs/wezterm
     ./modules/programs/zplug
     ./modules/programs/zsh
     ./modules/xresources

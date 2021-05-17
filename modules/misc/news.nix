@@ -2000,6 +2000,13 @@ in
           login shells.
         '';
       }
+
+      {
+        time = "2021-05-10T14:10:03+00:00";
+        message = ''
+          A new module is available: 'programs.wezterm'.
+        '';
+      }
     ];
   };
 }
