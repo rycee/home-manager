@@ -11,37 +11,37 @@ let
       options = {
         autoconnect = mkOption {
           type = nullOr bool;
-          description = "Autoconnect to network";
+          description = "Autoconnect to network.";
           default = false;
         };
 
         connectToSelectedServerOnly = mkOption {
           type = nullOr bool;
-          description = "Connect to selected server only";
+          description = "Connect to selected server only.";
           default = true;
         };
 
         bypassProxy = mkOption {
           type = nullOr bool;
-          description = "Bypass proxy";
+          description = "Bypass proxy.";
           default = true;
         };
 
         forceSSL = mkOption {
           type = nullOr bool;
-          description = "Use SSL for all servers";
+          description = "Use SSL for all servers.";
           default = false;
         };
 
         acceptInvalidSSLCertificates = mkOption {
           type = nullOr bool;
-          description = "Accept invalid SSL certificates";
+          description = "Accept invalid SSL certificates.";
           default = false;
         };
 
         useGlobalUserInformation = mkOption {
           type = nullOr bool;
-          description = "Use global user information";
+          description = "Use global user information.";
           default = false;
         };
       };
@@ -60,7 +60,7 @@ let
         charset = mkOption {
           type = nullOr str;
           default = null;
-          description = "Charset";
+          description = "Charset.";
           example = "UTF-8 (Unicode)";
         };
 
@@ -99,19 +99,19 @@ let
         nickname = mkOption {
           type = nullOr str;
           default = null;
-          description = "Primary nickname";
+          description = "Primary nickname.";
         };
 
         nickname2 = mkOption {
           type = nullOr str;
           default = null;
-          description = "Secondary nickname";
+          description = "Secondary nickname.";
         };
 
         options = mkOption {
-          default = null;
           type = nullOr channelOptions;
-          description = "Channel options";
+          default = null;
+          description = "Channel options.";
           example = literalExample
             "{ autoconnect = true; useGlobalUserInformation = true; }";
         };
@@ -119,18 +119,18 @@ let
         password = mkOption {
           type = nullOr str;
           default = null;
-          description = "Password";
+          description = "Password.";
         };
 
         realName = mkOption {
           type = nullOr str;
           default = null;
-          description = "Real name";
+          description = "Real name.";
         };
 
         servers = mkOption {
-          type = (listOf str);
-          description = "IRC Server Address List";
+          type = listOf str;
+          description = "IRC Server Address List.";
           example =
             literalExample ''[ "chat.freenode.net" "irc.freenode.net" ]'';
           default = [ ];
@@ -139,7 +139,7 @@ let
         userName = mkOption {
           type = nullOr str;
           default = null;
-          description = "User name";
+          description = "User name.";
         };
       };
     };
@@ -205,7 +205,8 @@ in {
     channels = mkOption {
       default = null;
       type = nullOr (attrsOf modChannelOption);
-      description = "Configures '~/.config/hexchat/servlist.conf'";
+      description =
+        "Configures <filename>~/.config/hexchat/servlist.conf</filename>.";
       example = literalExample ''
         {
           freenode = {
@@ -243,7 +244,7 @@ in {
     settings = mkOption {
       default = null;
       description = ''
-        Configuration for "~/.config/hexchat/hexchat.conf", see
+        Configuration for <filename>~/.config/hexchat/hexchat.conf</filename>, see
         <link xlink:href="https://hexchat.readthedocs.io/en/latest/settings.html#list-of-settings"/>
         for supported values.
       '';
@@ -266,9 +267,9 @@ in {
         Certify to back-up any previous configuration before enabling this.
 
         Enabling this setting is recommended, because everytime HexChat application is
-        closed it overwrites Nix/Home-Manager provided configuration files, causing:
-        1. Nix/HM provided configuration to be out of sync with actual active HexChat configuration.
-        2. Blocking Nix/HM updates until configuration files are manually removed.
+        closed it overwrites Nix/Home Manager provided configuration files, causing:
+        1. Nix/Home Manager provided configuration to be out of sync with actual active HexChat configuration.
+        2. Blocking Nix/Home  Manager updates until configuration files are manually removed.
       '';
       default = false;
     };
@@ -280,7 +281,7 @@ in {
         Expects a derivation containing decompressed theme files.
         '.hct' file format requires unzip decompression, as seen in example.
       '';
-      example = ''
+      example = literalExample ''
         stdenv.mkDerivation rec {
           name = "hexchat-theme-MatriY";
           buildInputs = [ pkgs.unzip ];
