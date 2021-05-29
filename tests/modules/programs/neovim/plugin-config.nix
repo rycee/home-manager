@@ -20,6 +20,9 @@ with lib;
           '';
         }
       ];
+      extraLuaPackages = [
+        pkgs.lua51Packages.luautf8
+      ];
     };
 
     nmt.script = ''

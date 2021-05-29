@@ -14,6 +14,17 @@ let
     merge = mergeOneOption;
   };
 
+  # Currently, upstream Neovim is pinned on Lua 5.1 for LuaJIT support.
+  # This will need to be updated if Neovim ever migrates to a newer
+  # version of Lua.
+  extraLua51PackageType = mkOptionType {
+    name = "extra-lua51-packages";
+    description = "lua5.1 packages in lua5_1.withPackages format";
+    check = with types;
+      (x: if isFunction x then isList (x pkgs.lua51Packages) else false);
+    merge = mergeOneOption;
+  };
+
   pluginWithConfigType = types.submodule {
     options = {
       config = mkOption {
@@ -57,6 +68,16 @@ let
 
   extraMakeWrapperArgs = lib.optionalString (cfg.extraPackages != [ ])
     ''--suffix PATH : "${lib.makeBinPath cfg.extraPackages}"'';
+  extraMakeWrapperLuaCArgs = lib.optionalString (cfg.extraLuaPackages != [ ]) ''
+    --suffix LUA_CPATH ";" "${
+      lib.concatMapStringsSep ";" pkgs.lua51Packages.getLuaCPath
+      cfg.extraLuaPackages
+    }"'';
+  extraMakeWrapperLuaArgs = lib.optionalString (cfg.extraLuaPackages != [ ]) ''
+    --suffix LUA_PATH ";" "${
+      lib.concatMapStringsSep ";" pkgs.lua51Packages.getLuaPath
+      cfg.extraLuaPackages
+    }"'';
 
 in {
   imports = [
@@ -128,6 +149,17 @@ in {
         description = ''
           A function in python.withPackages format, which returns a
           list of Python 3 packages required for your plugins to work.
+        '';
+      };
+
+      extraLuaPackages = mkOption {
+        type = with types; either extraLua51PackageType (listOf package);
+        default = [ ];
+        defaultText = "[]";
+        example = literalExample "(ps: with ps; [ luautf8 ])";
+        description = ''
+          A function in lua5_1.withPackages format, which returns a
+          list of Lua packages required for your plugins to work.
         '';
       };
 
@@ -246,7 +278,8 @@ in {
     programs.neovim.finalPackage = pkgs.wrapNeovimUnstable cfg.package
       (neovimConfig // {
         wrapperArgs = (lib.escapeShellArgs neovimConfig.wrapperArgs) + " "
-          + extraMakeWrapperArgs;
+          + extraMakeWrapperArgs + " " + extraMakeWrapperLuaCArgs + " "
+          + extraMakeWrapperLuaArgs;
       });
 
     programs.bash.shellAliases = mkIf cfg.vimdiffAlias { vimdiff = "nvim -d"; };
