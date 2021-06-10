@@ -169,7 +169,7 @@ in
           }
         ));
     in mkIf cfg.enable {
-      home.file.".bash_profile".source = pkgs.writeShellScript "bash_profile" ''
+      home.file.".bash_profile".text = ''
         # include .profile if it exists
         [[ -f ~/.profile ]] && . ~/.profile
 
@@ -177,7 +177,7 @@ in
         [[ -f ~/.bashrc ]] && . ~/.bashrc
       '';
 
-      home.file.".profile".source = pkgs.writeShellScript "profile" ''
+      home.file.".profile".text = ''
         . "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh"
 
         ${sessionVarsStr}
@@ -185,7 +185,7 @@ in
         ${cfg.profileExtra}
       '';
 
-      home.file.".bashrc".source = pkgs.writeShellScript "bashrc" ''
+      home.file.".bashrc".text = ''
         ${cfg.bashrcExtra}
 
         # Commands that should be applied only for interactive shells.
@@ -201,7 +201,7 @@ in
       '';
 
       home.file.".bash_logout" = mkIf (cfg.logoutExtra != "") {
-        source = pkgs.writeShellScript "bash_logout" cfg.logoutExtra;
+        text = cfg.logoutExtra;
       };
     }
   );
