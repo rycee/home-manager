@@ -100,6 +100,7 @@ import nmt {
     ./modules/programs/firefox
     ./modules/programs/foot
     ./modules/programs/getmail
+    ./modules/programs/hexchat
     ./modules/programs/i3status-rust
     ./modules/programs/ncmpcpp-linux
     ./modules/programs/neovim   # Broken package dependency on Darwin.

@@ -81,6 +81,9 @@
 
 /modules/programs/go.nix                              @rvolosatovs
 
+/modules/programs/hexchat.nix                         @superherointj @thiagokokada
+/tests/modules/programs/hexchat                       @thiagokokada
+
 /modules/programs/home-manager.nix                    @rycee
 
 /modules/programs/htop.nix                            @bjpbakker
