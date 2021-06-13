@@ -138,6 +138,13 @@ in {
         }
       '';
     };
+
+    package = mkOption {
+      type = types.package;
+      default = pkgs.i3status;
+      defaultText = literalExample "pkgs.i3status";
+      description = "The i3status package to use.";
+    };
   };
 
   config = mkIf cfg.enable {
@@ -197,7 +204,7 @@ in {
       };
     };
 
-    home.packages = [ pkgs.i3status ];
+    home.packages = [ cfg.package ];
 
     xdg.configFile."i3status/config".text = concatStringsSep "\n" ([ ]
       ++ optional (cfg.general != { }) (formatModule "general" cfg.general)
