@@ -74,6 +74,7 @@ let
     (loadModule ./programs/getmail.nix { condition = hostPlatform.isLinux; })
     (loadModule ./programs/gh.nix { })
     (loadModule ./programs/git.nix { })
+    (loadModule ./programs/gnome-shell.nix { condition = hostPlatform.isLinux; })
     (loadModule ./programs/gnome-terminal.nix { })
     (loadModule ./programs/go.nix { })
     (loadModule ./programs/gpg.nix { })

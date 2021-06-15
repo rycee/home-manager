@@ -2084,6 +2084,14 @@ in
           A new module is available: 'programs.mangohud'.
         '';
       }
+
+      {
+        time = "2021-06-13T21:40:02+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          A new module is available: 'programs.gnome-shell'.
+        '';
+      }
     ];
   };
 }
