@@ -3,7 +3,27 @@
 # Prepare to use tools from Nixpkgs.
 PATH=@coreutils@/bin:@findutils@/bin:@gnused@/bin:@less@/bin${PATH:+:}$PATH
 
+export TEXTDOMAINDIR=@TEXTDOMAINDIR@
+
 set -euo pipefail
+
+function _echo() {
+    local msgid="$1"
+    shift
+
+    # shellcheck disable=2059
+    printf "$(@gettext@/bin/gettext -e "home-manager" "$msgid")\n" "$@"
+}
+
+function _echop() {
+    local msgid="$1"
+    local msgidPlural="$2"
+    local count="$3"
+    shift 3
+
+    # shellcheck disable=2059
+    printf "$(@gettext@/bin/ngettext -e "home-manager" "$msgid" "$msgidPlural" "$count")\n" "$@"
+}
 
 function errorEcho() {
     # shellcheck disable=2048,2086
@@ -39,7 +59,8 @@ function setWorkDir() {
 function setConfigFile() {
     if [[ -v HOME_MANAGER_CONFIG ]] ; then
         if [[ ! -e "$HOME_MANAGER_CONFIG" ]] ; then
-            errorEcho "No configuration file found at $HOME_MANAGER_CONFIG"
+            _echo "No configuration file found at %s" \
+               "$HOME_MANAGER_CONFIG" >&2
             exit 1
         fi
 
@@ -57,8 +78,8 @@ function setConfigFile() {
         fi
     done
 
-    errorEcho "No configuration file found." \
-         "Please create one at $defaultConfFile"
+    _echo "No configuration file found. Please create one at %s" \
+       "$defaultConfFile" >&2
     exit 1
 }
 
@@ -100,7 +121,7 @@ function setFlakeAttribute() {
 function doInstantiate() {
     setFlakeAttribute
     if [[ -v FLAKE_CONFIG_URI ]]; then
-        errorEcho "Can't instantiate a flake configuration"
+        _echo "Can't instantiate a flake configuration" >&2
         exit 1
     fi
     setConfigFile
@@ -160,20 +181,16 @@ function presentNews() {
     elif [[ "$newsDisplay" == "silent" ]]; then
         return
     elif [[ "$newsDisplay" == "notify" ]]; then
-        local msg
-        if [[ $newsNumUnread -eq 1 ]]; then
-            msg="There is an unread and relevant news item.\n"
-            msg+="Read it by running the command '$(basename "$0") news'."
-        else
-            msg="There are $newsNumUnread unread and relevant news items.\n"
-            msg+="Read them by running the command '$(basename "$0") news'."
-        fi
+        local cmd msg
+        cmd="$(basename "$0")"
+        msg="$(_echop \
+                $'There is %d unread and relevant news item.\nRead it by running the command "%s news".' \
+                $'There are %d unread and relevant news items.\nRead them by running the command "%s news".' \
+                "$newsNumUnread" "$newsNumUnread" "$cmd")"
 
         # Not actually an error but here stdout is reserved for
         # nix-build output.
-        errorEcho
-        errorEcho -e "$msg"
-        errorEcho
+        echo $'\n'"$msg"$'\n' >&2
 
         if [[ -v DISPLAY ]] && type -P notify-send > /dev/null; then
             notify-send "Home Manager" "$msg"
@@ -181,13 +198,14 @@ function presentNews() {
     elif [[ "$newsDisplay" == "show" ]]; then
         doShowNews --unread
     else
-        errorEcho "Unknown 'news.display' setting '$newsDisplay'."
+        _echo 'Unknown "news.display" setting "%s".' "$newsDisplay" >&2
     fi
 }
 
 function doEdit() {
     if [[ ! -v EDITOR || -z $EDITOR ]]; then
-        errorEcho "Please set the \$EDITOR environment variable"
+        # shellcheck disable=2016
+        _echo 'Please set the $EDITOR environment variable' >&2
         return 1
     fi
 
@@ -202,7 +220,7 @@ function doEdit() {
 
 function doBuild() {
     if [[ ! -w . ]]; then
-        errorEcho "Cannot run build in read-only directory";
+        _echo 'Cannot run build in read-only directory' >&2
         return 1
     fi
 
@@ -293,9 +311,9 @@ function doRmGenerations() {
         local linkName="home-manager-$generationId-link"
 
         if [[ ! -e $linkName ]]; then
-            errorEcho "No generation with ID $generationId"
+            _echo 'No generation with ID %s' "$generationId" >&2
         elif [[ $linkName == $(readlink home-manager) ]]; then
-            errorEcho "Cannot remove the current generation $generationId"
+            _echo 'Cannot remove the current generation %s' "$generationId" >&2
         else
             echo Removing generation $generationId
             $DRY_RUN_CMD rm $VERBOSE_ARG $linkName
@@ -323,7 +341,7 @@ function doExpireGenerations() {
         # shellcheck disable=2086
         doRmGenerations $generations
     elif [[ -v VERBOSE ]]; then
-        echo "No generations to expire"
+        _echo "No generations to expire"
     fi
 }
 
@@ -333,7 +351,7 @@ function doListPackages() {
     if [[ -n "$outPath" ]] ; then
         nix-store -q --references "$outPath" | sed 's/[^-]*-//'
     else
-        errorEcho "No home-manager packages seem to be installed."
+        _echo 'No home-manager packages seem to be installed.' >&2
     fi
 }
 
@@ -390,7 +408,7 @@ function doShowNews() {
             ${PAGER:-less} "$newsFileUnread"
             ;;
         *)
-            errorEcho "Unknown argument $1"
+            _echo 'Unknown argument %s' "$1"
             return 1
     esac
 
@@ -405,19 +423,19 @@ function doShowNews() {
 function doUninstall() {
     setVerboseAndDryRun
 
-    echo "This will remove Home Manager from your system."
+    _echo 'This will remove Home Manager from your system.'
 
     if [[ -v DRY_RUN ]]; then
-        echo "This is a dry run, nothing will actually be uninstalled."
+        _echo 'This is a dry run, nothing will actually be uninstalled.'
     fi
 
     local confirmation
-    read -r -n 1 -p "Really uninstall Home Manager? [y/n] " confirmation
+    read -r -n 1 -p "$(_echo 'Really uninstall Home Manager?') [y/n] " confirmation
     echo
 
     case $confirmation in
         y|Y)
-            echo "Switching to empty Home Manager configuration..."
+            _echo "Switching to empty Home Manager configuration..."
             HOME_MANAGER_CONFIG="$(mktemp --tmpdir home-manager.XXXXXXXXXX)"
             echo "{ lib, ... }: { home.file = lib.mkForce {}; }" > "$HOME_MANAGER_CONFIG"
             doSwitch
@@ -429,28 +447,28 @@ function doUninstall() {
                 "$NIX_STATE_DIR/gcroots/per-user/$USER/current-home"
             ;;
         *)
-            echo "Yay!"
+            _echo "Yay!"
             exit 0
             ;;
     esac
 
     local deleteProfiles
     read -r -n 1 \
-         -p 'Remove all Home Manager generations? [y/n] ' \
+         -p "$(_echo 'Remove all Home Manager generations?') [y/n] " \
          deleteProfiles
     echo
 
     case $deleteProfiles in
         y|Y)
             doRmAllGenerations
-            echo "All generations are now eligible for garbage collection."
+            _echo 'All generations are now eligible for garbage collection.'
             ;;
         *)
-            echo "Leaving generations but they may still be garbage collected."
+            _echo 'Leaving generations but they may still be garbage collected.'
             ;;
     esac
 
-    echo "Home Manager is uninstalled but your home.nix is left untouched."
+    _echo "Home Manager is uninstalled but your home.nix is left untouched."
 }
 
 function doHelp() {
@@ -590,8 +608,8 @@ while [[ $# -gt 0 ]]; do
                     COMMAND_ARGS+=("$opt")
                     ;;
                 *)
-                    errorEcho "$0: unknown option '$opt'"
-                    errorEcho "Run '$0 --help' for usage help"
+                    _echo "%s: unknown option '%s'" "$0" "$opt" >&2
+                    _echo "Run '%s --help' for usage help" "$0" >&2
                     exit 1
                     ;;
             esac
@@ -625,7 +643,7 @@ case $COMMAND in
         ;;
     expire-generations)
         if [[ ${#COMMAND_ARGS[@]} != 1 ]]; then
-            errorEcho "expire-generations expects one argument, got ${#COMMAND_ARGS[@]}."
+            _echo 'expire-generations expects one argument, got %d.' "${#COMMAND_ARGS[@]}" >&2
             exit 1
         else
             doExpireGenerations "${COMMAND_ARGS[@]}"
@@ -644,7 +662,7 @@ case $COMMAND in
         doHelp
         ;;
     *)
-        errorEcho "Unknown command: $COMMAND"
+        _echo 'Unknown command: %s' "$COMMAND" >&2
         doHelp >&2
         exit 1
         ;;

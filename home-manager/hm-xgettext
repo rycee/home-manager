@@ -1,0 +1,10 @@
+#! /usr/bin/env nix-shell
+#! nix-shell -I https://github.com/NixOS/nixpkgs/archive/05f0934825c2a0750d4888c4735f9420c906b388.tar.gz -i bash -p gettext
+
+xgettext --package-name='Home Manager' \
+         --copyright-holder='Home Manager contributors' \
+         --msgid-bugs-address=https://github.com/nix-community/home-manager/issues \
+         -L Shell -k \
+         -k_echo:1 --flag=_echo:1:c-format \
+         -k_echop:1,2 --flag=_echop:1:c-format --flag=_echop:2:c-format \
+         -o po/home-manager.pot -d home-manager home-manager
