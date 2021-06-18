@@ -140,8 +140,25 @@ in {
 
           # The activation script is run by a login shell to make sure
           # that the user is given a sane Nix environment.
-          ExecStart = pkgs.writeScript "activate-${username}" ''
+          ExecStart = let
+            systemctl =
+              "XDG_RUNTIME_DIR=\${XDG_RUNTIME_DIR:-/run/user/$UID} systemctl";
+            exportedVariables = [
+              "XDG_RUNTIME_DIR"
+              "DBUS_SESSION_BUS_ADDRESS"
+              "DISPLAY"
+              "XAUTHORITY"
+            ];
+          in pkgs.writeScript "activate-${username}" ''
             #! ${pkgs.runtimeShell} -el
+
+            # If the user is logged in, import variables from their current
+            # session environment.
+            eval "$(${systemctl} --user show-environment 2> /dev/null |
+                    sed -En '/^(${
+                      concatStringsSep "|" exportedVariables
+                    })=/s/^/export /p')"
+
             echo Activating home-manager configuration for ${username}
             exec ${usercfg.home.activationPackage}/activate
           '';
