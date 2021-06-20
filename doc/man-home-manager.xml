@@ -140,6 +140,10 @@
    </arg>
 
    <arg>
+    --impure
+   </arg>
+
+   <arg>
     --keep-failed
    </arg>
 
@@ -479,6 +483,18 @@
    <varlistentry>
     <term>
      <option>--debug</option>
+    </term>
+    <listitem>
+     <para>
+      Passed on to <citerefentry>
+      <refentrytitle>nix-build</refentrytitle>
+      <manvolnum>1</manvolnum> </citerefentry>.
+     </para>
+    </listitem>
+   </varlistentry>
+   <varlistentry>
+    <term>
+     <option>--impure</option>
     </term>
     <listitem>
      <para>
