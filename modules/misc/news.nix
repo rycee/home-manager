@@ -2084,6 +2084,13 @@ in
           A new module is available: 'programs.mangohud'.
         '';
       }
+
+      {
+        time = "2021-06-20T07:16:21+00:00";
+        message = ''
+          A new command line argument is available: '--impure'.
+        '';
+      }
     ];
   };
 }

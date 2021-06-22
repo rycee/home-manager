@@ -514,6 +514,7 @@ function doHelp() {
     echo "  --arg(str) NAME VALUE    Override inputs passed to home-manager.nix"
     echo "  --cores NUM"
     echo "  --debug"
+    echo "  --impure"
     echo "  --keep-failed"
     echo "  --keep-going"
     echo "  -j, --max-jobs NUM"
@@ -617,7 +618,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --debug|--keep-failed|--keep-going|--show-trace\
-            |--substitute|--no-substitute)
+            |--substitute|--no-substitute|--impure)
             PASSTHROUGH_OPTS+=("$opt")
             ;;
         -v|--verbose)
