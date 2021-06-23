@@ -17,7 +17,7 @@ with lib;
       assertFileContent \
         home-files/.bash_logout \
         ${
-          pkgs.writeShellScript "logout-expected" ''
+          pkgs.writeText "logout-expected" ''
             clear-console
           ''
         }

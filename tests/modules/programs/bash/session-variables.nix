@@ -18,7 +18,7 @@ with lib;
       assertFileContent \
         home-files/.profile \
         ${
-          pkgs.writeShellScript "session-variables-expected" ''
+          pkgs.writeText "session-variables-expected" ''
             . "/home/hm-user/.nix-profile/etc/profile.d/hm-session-vars.sh"
 
             export V1="v1"
