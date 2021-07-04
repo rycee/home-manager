@@ -1,0 +1,119 @@
+[[ch-flakes]]
+== Using Home Manager with Flakes
+
+If you are using flakes to configure your system, you can make your
+home-manager configuration a flake aswell. This will allow you to specify it as
+input in your system configuration where needed.
+
+Add a flake.nix file to the repository you are keeping your home-manager
+configuration in and define one or more outputs. If you already have a home.nix
+file, it can be imported. A minimal flake.nix may look like this:
+
+[source,nix]
+----
+{
+  description = "User configurations for pinpox";
+
+  inputs.nur.url = "github:nix-community/NUR";
+
+  outputs = { self, nixpkgs, dotfiles-awesome, nur}: {
+
+    nixosModules = {
+
+      # User configuration for desktop
+      desktop = {
+        imports = [
+          ./home.nix
+          { nixpkgs.overlays = [ nur.overlay ]; }
+        ];
+      };
+    };
+  };
+}
+
+----
+
+In your system's configuration flake.nix, you will have to add two inputs:
+home-manager itself and your home-manager configuration.
+
+as an input and
+import the output from your home-manager flake.nix for any host you wish tho
+use it in:
+
+[source,nix]
+----
+
+  inputs = {
+
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+
+    home-manager.url = "github:nix-community/home-manager/master";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    nixos-home.url = "github:pinpox/nixos-home";
+    nixos-home.inputs.nixpkgs.follows = "nixpkgs";
+  };
+
+----
+
+Finally, add the home-manager configuration to the definition of your system:
+
+[source,nix]
+----
+{
+
+  outputs = { self, nixpkgs,  home-manager, nixos-home }:
+    let
+      # Function to create default (common) system config options
+      defFlakeSystem = baseCfg:
+        nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
+          modules = [
+            # Add home-manager option to all configs
+            ({ ... }: {
+              imports = [
+                {
+                  # Set the $NIX_PATH entry for nixpkgs. This is necessary in
+                  # this setup with flakes, otherwise commands like `nix-shell
+                  # -p pkgs.htop` will keep using an old version of nixpkgs.
+                  # With this entry in $NIX_PATH it is possible (and
+                  # recommended) to remove the `nixos` channel for both users
+                  # and root e.g. `nix-channel --remove nixos`. `nix-channel
+                  # --list` should be empty for all users afterwards
+                  nix.nixPath = [ "nixpkgs=${nixpkgs}" ];
+                }
+                baseCfg
+                home-manager.nixosModules.home-manager
+                # DONT set useGlobalPackages! It's not necessary in newer
+                # home-manager versions and does not work with configs using
+                # `nixpkgs.config`
+                { home-manager.useUserPackages = true; }
+              ];
+              # Let 'nixos-version --json' know the Git revision of this flake.
+              system.configurationRevision =
+                nixpkgs.lib.mkIf (self ? rev) self.rev;
+              nix.registry.nixpkgs.flake = nixpkgs;
+            })
+          ];
+        };
+    in {
+      nixosConfigurations = {
+
+        inherit nixpkgs;
+
+        my-awesome-host = defFlakeSystem {
+          imports = [
+
+            # Other configuration modules
+            ./machines/my-host/configuration.nix
+
+            # Add home-manager config
+            { home-manager.users.pinpox = nixos-home.nixosModules.desktop; }
+            }
+
+          ];
+        };
+      };
+    };
+}
+----

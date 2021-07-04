@@ -30,6 +30,7 @@
  </preface>
  <xi:include href="installation.xml" />
  <xi:include href="writing-modules.xml" />
+ <xi:include href="flakes.xml" />
  <xi:include href="contributing.xml" />
  <xi:include href="faq.xml" />
  <appendix xml:id="ch-options">
