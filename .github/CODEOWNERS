@@ -239,6 +239,9 @@
 
 /modules/services/grobi.nix                           @mbrgm
 
+/modules/services/home-manager-auto-upgrade.nix       @pinage404
+/tests/modules/services/home-manager-auto-upgrade     @pinage404
+
 /modules/services/hound.nix                           @adisbladis
 
 /modules/services/imapnotify.nix                      @nickhu

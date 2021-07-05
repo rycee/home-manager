@@ -115,4 +115,10 @@
     githubId = 56614642;
     name = "Ilan Joselevich";
   };
+  pinage404 = {
+    name = "pinage404";
+    email = "pinage404@gmail.com";
+    github = "pinage404";
+    githubId = 6325757;
+  };
 }

@@ -119,6 +119,7 @@ import nmt {
     ./modules/services/dropbox
     ./modules/services/emacs
     ./modules/services/fluidsynth
+    ./modules/services/home-manager-auto-upgrade
     ./modules/services/kanshi
     ./modules/services/lieer
     ./modules/services/pantalaimon
