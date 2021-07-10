@@ -3,79 +3,61 @@
 with lib;
 with builtins;
 
+# TODO evaluate https://github.com/imZack/jsonlibconfig
 let
-
   cfg = config.services.picom;
 
-  configFile = pkgs.writeText "picom.conf" (optionalString cfg.fade ''
-    # fading
-    fading = true;
-    fade-delta    = ${toString cfg.fadeDelta};
-    fade-in-step  = ${elemAt cfg.fadeSteps 0};
-    fade-out-step = ${elemAt cfg.fadeSteps 1};
-    fade-exclude  = ${toJSON cfg.fadeExclude};
-  '' + optionalString cfg.shadow ''
+  _toConf = v:
+    with builtins;
+    let isPath = v: typeOf v == "path";
+    in if isInt v then
+      toString v
+    else if isFloat v then
+      "${toString v}"
+    else if isString v then
+      ''"${strings.escape [ ''"'' ] v}"''
+    else if true == v then
+      "true"
+    else if false == v then
+      "false"
+    else if null == v then
+      "null"
+    else if isPath v then
+      toString v
+    else if isList v then
+      "[ " + strings.concatMapStringsSep "," _toConf v + " ]"
+    else if isAttrs v then
+    # apply pretty values if allowed
+      if attrNames v == [ "__pretty" "val" ] && allowPrettyValues then
+        v.__pretty v.val
+        # TODO: there is probably a better representation?
+      else if v ? type && v.type == "derivation" then
+        "<δ:${v.name}>"
+        # "<δ:${concatStringsSep "," (builtins.attrNames v)}>"
+      else
+        "{ " + strings.concatStringsSep " "
+        (attrsets.mapAttrsToList (name: value: "${name} = ${_toConf value};") v)
+        + " }"
+    else
+      abort "picom: not supported: (v = ${v})";
 
-    # shadows
-    shadow = true;
-    shadow-offset-x = ${toString (elemAt cfg.shadowOffsets 0)};
-    shadow-offset-y = ${toString (elemAt cfg.shadowOffsets 1)};
-    shadow-opacity  = ${cfg.shadowOpacity};
-    shadow-exclude  = ${toJSON cfg.shadowExclude};
-  '' + optionalString cfg.blur ''
+  toConf = v:
+    with builtins;
+    if isAttrs v then
+      if v ? type && v.type == "derivation" then
+        abort "picom: not supported: (v = ${v})"
+      else
+        strings.concatStringsSep " "
+        (attrsets.mapAttrsToList (name: value: "${name} = ${_toConf value};") v)
+    else
+      abort "picom: not supported: (v = ${v})";
 
-    # blur
-    blur-background         = true;
-    blur-background-exclude = ${toJSON cfg.blurExclude};
-  '' + ''
-
-    # opacity
-    active-opacity   = ${cfg.activeOpacity};
-    inactive-opacity = ${cfg.inactiveOpacity};
-    inactive-dim     = ${cfg.inactiveDim};
-    opacity-rule     = ${toJSON cfg.opacityRule};
-
-    wintypes:
-    {
-      dock          = { shadow = ${toJSON (!cfg.noDockShadow)}; };
-      dnd           = { shadow = ${toJSON (!cfg.noDNDShadow)}; };
-      popup_menu    = { opacity = ${cfg.menuOpacity}; };
-      dropdown_menu = { opacity = ${cfg.menuOpacity}; };
-    };
-
-    # other options
-    backend = ${toJSON cfg.backend};
-    vsync = ${toJSON cfg.vSync};
-    refresh-rate = ${toString cfg.refreshRate};
-  '' + cfg.extraOptions);
+  configFile = pkgs.writeText "picom.conf" (toConf cfg.settings);
 
 in {
 
   options.services.picom = {
     enable = mkEnableOption "Picom X11 compositor";
-
-    blur = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable background blur on transparent windows.
-      '';
-    };
-
-    blurExclude = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      example = [ "class_g = 'slop'" "class_i = 'polybar'" ];
-      description = ''
-        List of windows to exclude background blur.
-        See the
-        <citerefentry>
-          <refentrytitle>picom</refentrytitle>
-          <manvolnum>1</manvolnum>
-        </citerefentry>
-        man page for more examples.
-      '';
-    };
 
     experimentalBackends = mkOption {
       type = types.bool;
@@ -85,177 +67,52 @@ in {
       '';
     };
 
-    fade = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Fade windows in and out.
+    settings = mkOption {
+      type = with types;
+        let
+          prim = oneOf [ bool int str float ];
+          primOrPrimAttrs = either prim (attrsOf prim);
+          entry = either prim (listOf primOrPrimAttrs);
+          entryOrAttrsOf = t: either entry (attrsOf t);
+          entries = entryOrAttrsOf (entryOrAttrsOf entry);
+        in attrsOf entries // { description = "Picom configuration"; };
+      default = { };
+      example = literalExample ''
+        {
+          backend = "glx";
+          vsync = false;
+          refresh-rate = 0;
+          unredir-if-possible = false;
+          blur-background = true;
+          blur-background-exclude = [ ];
+          blur-method = "dual_kawase";
+          blur-strength = 10;
+          wintypes = {
+            dock = {
+              corner-radius = 4;
+            };
+            normal = {
+              shadow = true;
+            };
+          };
+          rounded-corners-exclude = [
+            "window_type = 'menu'"
+            "window_type = 'dock'"
+            "window_type = 'dropdown_menu'"
+            "window_type = 'popup_menu'"
+            "class_g = 'Polybar'"
+            "class_g = 'Rofi'"
+            "class_g = 'Dunst'"
+          ];
+          detect-rounded-corners = true;
+          corner-radius = 10;
+          round-borders = 1;
+          frame-opacity = builtins.fromJSON config.lib.base16.theme.alpha;
+        }
       '';
-    };
-
-    fadeDelta = mkOption {
-      type = types.int;
-      default = 10;
-      example = 5;
       description = ''
-        Time between fade animation step (in ms).
-      '';
-    };
-
-    fadeSteps = mkOption {
-      type = types.listOf types.str;
-      default = [ "0.028" "0.03" ];
-      example = [ "0.04" "0.04" ];
-      description = ''
-        Opacity change between fade steps (in and out).
-      '';
-    };
-
-    fadeExclude = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      example = [ "window_type *= 'menu'" "name ~= 'Firefox$'" "focused = 1" ];
-      description = ''
-        List of conditions of windows that should not be faded.
-        See the
-        <citerefentry>
-          <refentrytitle>picom</refentrytitle>
-          <manvolnum>1</manvolnum>
-        </citerefentry>
-        man page for more examples.
-      '';
-    };
-
-    shadow = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Draw window shadows.
-      '';
-    };
-
-    shadowOffsets = mkOption {
-      type = types.listOf types.int;
-      default = [ (-15) (-15) ];
-      example = [ (-10) (-15) ];
-      description = ''
-        Horizontal and vertical offsets for shadows (in pixels).
-      '';
-    };
-
-    shadowOpacity = mkOption {
-      type = types.str;
-      default = "0.75";
-      example = "0.8";
-      description = ''
-        Window shadows opacity (number in range 0 - 1).
-      '';
-    };
-
-    shadowExclude = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      example = [ "window_type *= 'menu'" "name ~= 'Firefox$'" "focused = 1" ];
-      description = ''
-        List of conditions of windows that should have no shadow.
-        See the
-        <citerefentry>
-          <refentrytitle>picom</refentrytitle>
-          <manvolnum>1</manvolnum>
-        </citerefentry>
-        man page for more examples.
-      '';
-    };
-
-    noDockShadow = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Avoid shadow on docks.
-      '';
-    };
-
-    noDNDShadow = mkOption {
-      type = types.bool;
-      default = true;
-      description = ''
-        Avoid shadow on drag-and-drop windows.
-      '';
-    };
-
-    activeOpacity = mkOption {
-      type = types.str;
-      default = "1.0";
-      example = "0.8";
-      description = ''
-        Opacity of active windows.
-      '';
-    };
-
-    inactiveDim = mkOption {
-      type = types.str;
-      default = "0.0";
-      example = "0.2";
-      description = ''
-        Dim inactive windows.
-      '';
-    };
-
-    inactiveOpacity = mkOption {
-      type = types.str;
-      default = "1.0";
-      example = "0.8";
-      description = ''
-        Opacity of inactive windows.
-      '';
-    };
-
-    menuOpacity = mkOption {
-      type = types.str;
-      default = "1.0";
-      example = "0.8";
-      description = ''
-        Opacity of dropdown and popup menu.
-      '';
-    };
-
-    opacityRule = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      example = [ "87:class_i ?= 'scratchpad'" "91:class_i ?= 'xterm'" ];
-      description = ''
-        List of opacity rules.
-        See the
-        <citerefentry>
-          <refentrytitle>picom</refentrytitle>
-          <manvolnum>1</manvolnum>
-        </citerefentry>
-        man page for more examples.
-      '';
-    };
-
-    backend = mkOption {
-      type = types.str;
-      default = "glx";
-      description = ''
-        Backend to use: <literal>glx</literal> or <literal>xrender</literal>.
-      '';
-    };
-
-    vSync = mkOption {
-      type = types.bool;
-      default = false;
-      description = ''
-        Enable vertical synchronization.
-      '';
-    };
-
-    refreshRate = mkOption {
-      type = types.int;
-      default = 0;
-      example = 60;
-      description = ''
-        Screen refresh rate (0 = automatically detect).
+        See <link xlink:href="https://github.com/yshui/picom/blob/next/picom.sample.conf" /> for the full list
+        of options.
       '';
     };
 
@@ -266,18 +123,6 @@ in {
       example = literalExample "pkgs.picom";
       description = ''
         picom derivation to use.
-      '';
-    };
-
-    extraOptions = mkOption {
-      type = types.str;
-      default = "";
-      example = ''
-        unredir-if-possible = true;
-        dbe = true;
-      '';
-      description = ''
-        Additional Picom configuration.
       '';
     };
   };
@@ -302,9 +147,6 @@ in {
           + experimentalBackendsFlag;
         Restart = "always";
         RestartSec = 3;
-      } // optionalAttrs (cfg.backend == "glx") {
-        # Temporarily fixes corrupt colours with Mesa 18.
-        Environment = [ "allow_rgb10_configs=false" ];
       };
     };
   };
