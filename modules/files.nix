@@ -106,7 +106,12 @@ in
               $VERBOSE_ECHO "Skipping collision check for $targetPath"
             elif [[ -e "$targetPath" \
                 && ! "$(readlink "$targetPath")" == $homeFilePattern ]] ; then
-              if [[ ! -L "$targetPath" && -n "$HOME_MANAGER_BACKUP_EXT" ]] ; then
+              # The target file already exists and it isn't a symlink owned by home-manager
+              if cmp -s $sourcePath $targetPath; then
+                # First compare the file's content. If they're equal, we're fine
+                warnEcho "Existing file '$targetPath' is in the way of '$sourcePath', but they have the same content so it's fine."
+              elif [[ ! -L "$targetPath" && -n "$HOME_MANAGER_BACKUP_EXT" ]] ; then
+                # Next, try to move the file to a backup location if configured and possible
                 backup="$targetPath.$HOME_MANAGER_BACKUP_EXT"
                 if [[ -e "$backup" ]]; then
                   errorEcho "Existing file '$backup' would be clobbered by backing up '$targetPath'"
@@ -115,6 +120,7 @@ in
                   warnEcho "Existing file '$targetPath' is in the way of '$sourcePath', will be moved to '$backup'"
                 fi
               else
+                # Fail if nothing else works
                 errorEcho "Existing file '$targetPath' is in the way of '$sourcePath'"
                 collision=1
               fi
@@ -169,11 +175,19 @@ in
             relativePath="''${sourcePath#$newGenFiles/}"
             targetPath="$HOME/$relativePath"
             if [[ -e "$targetPath" && ! -L "$targetPath" && -n "$HOME_MANAGER_BACKUP_EXT" ]] ; then
+              # The target exists, back it up
               backup="$targetPath.$HOME_MANAGER_BACKUP_EXT"
               $DRY_RUN_CMD mv $VERBOSE_ARG "$targetPath" "$backup" || errorEcho "Moving '$targetPath' failed!"
             fi
-            $DRY_RUN_CMD mkdir -p $VERBOSE_ARG "$(dirname "$targetPath")"
-            $DRY_RUN_CMD ln -nsf $VERBOSE_ARG "$sourcePath" "$targetPath"
+            
+            if [[ -e "$targetPath" && ! -L "$targetPath" ]] && cmp -s $sourcePath $targetPath ; then
+              # The target exists but is identical – don't do anything
+              $VERBOSE_ECHO "Skipping '$targetPath' as it is identical to '$sourcePath'"
+            else
+              # Place that symlink, --force
+              $DRY_RUN_CMD mkdir -p $VERBOSE_ARG "$(dirname "$targetPath")"
+              $DRY_RUN_CMD ln -nsf $VERBOSE_ARG "$sourcePath" "$targetPath"
+            fi
           done
         '';
 
