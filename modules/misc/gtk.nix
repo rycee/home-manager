@@ -173,7 +173,7 @@ in {
       in ''
         DISPLAY=":0" $DRY_RUN_CMD ${xsettingsd} -c \
         <( echo "Net/ThemeName \"${cfg.theme.name}\"" ) & \
-        ${pkgs.procps}/bin/pkill -f ${xsettingsd} || true
+        kill $! || true
       '';
     };
 
