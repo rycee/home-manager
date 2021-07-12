@@ -187,7 +187,7 @@ in {
         gsettings-schemas =
           "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/gsettings-desktop-schemas-${pkgs.gsettings-desktop-schemas.version}";
       in ''
-        XDG_DATA_DIRS="$XDG_DATA_DIRS"${XDG_DATA_DIRS:+:}${escapeShellArg gsettings-schemas} \
+        XDG_DATA_DIRS="$XDG_DATA_DIRS":${escapeShellArg gsettings-schemas} \
         DBUS_SESSION_BUS_ADDRESS="unix:path=''${XDG_RUNTIME_DIR:-/run/user/$UID}/bus" \
         $DRY_RUN_CMD ${pkgs.glib}/bin/gsettings set org.gnome.desktop.interface gtk-theme ${cfg.theme.name}
       '';
