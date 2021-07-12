@@ -33,6 +33,8 @@
 
 /modules/misc/vte.nix                                 @rycee
 
+/modules/misc/xcompose.nix                            @bb010g
+
 /modules/misc/xdg-mime-apps.nix                       @pacien
 
 /modules/misc/xdg-user-dirs.nix                       @pacien

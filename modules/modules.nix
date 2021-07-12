@@ -41,6 +41,7 @@ let
     (loadModule ./misc/tmpfiles.nix { condition = hostPlatform.isLinux; })
     (loadModule ./misc/version.nix { })
     (loadModule ./misc/vte.nix { })
+    (loadModule ./misc/xcompose.nix { condition = hostPlatform.isLinux; })
     (loadModule ./misc/xdg-system-dirs.nix { condition = hostPlatform.isLinux; })
     (loadModule ./misc/xdg-desktop-entries.nix { condition = hostPlatform.isLinux; })
     (loadModule ./misc/xdg-mime.nix { condition = hostPlatform.isLinux; })
