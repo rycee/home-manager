@@ -52,6 +52,24 @@ in {
       . "${pkgs.nix}/etc/profile.d/nix.sh"
       . "${profileDirectory}/etc/profile.d/hm-session-vars.sh"
     '';
+    
+    programs.zsh.envExtra = ''
+      # Make system functions available to zsh
+      () {
+        setopt LOCAL_OPTIONS CASE_GLOB EXTENDED_GLOB
+
+        local system_fpaths=(
+            # Package default
+            /usr/share/zsh/site-functions(/-N)
+
+            # Debian 
+            /usr/share/zsh/functions/**/*(/-N)
+            /usr/share/zsh/vendor-completions/(/-N) 
+            /usr/share/zsh/vendor-functions/(/-N)
+        )
+        fpath=(''${fpath} ''${system_fpaths})
+      }
+    '';
 
     systemd.user.sessionVariables = let
       # https://github.com/archlinux/svntogit-packages/blob/packages/ncurses/trunk/PKGBUILD
