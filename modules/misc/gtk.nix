@@ -171,7 +171,10 @@ in {
         + cfg2.extraConfig;
       onChange = let xsettingsd = "${pkgs.xsettingsd}/bin/xsettingsd";
       in ''
-        DISPLAY=":0" $DRY_RUN_CMD ${xsettingsd} -c \
+        DISPLAY=$(grep "declare -x DISPLAY=" \
+        "''${XDG_RUNTIME_DIR:-/run/user/$UID}/env-vars" \
+        | cut -d '=' -f2 | cut -d '"' -f2) \
+        $DRY_RUN_CMD ${xsettingsd} -c \
         <( echo "Net/ThemeName \"${cfg.theme.name}\"" ) & \
         process=$!
         sleep 0.2 && kill $process || true
