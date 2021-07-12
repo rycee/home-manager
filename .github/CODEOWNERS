@@ -304,6 +304,9 @@
 
 /modules/services/taskwarrior-sync.nix                @minijackson @pacien
 
+/modules/services/trayer.nix                          @AndreasMager
+/tests/modules/services/trayer                        @AndreasMager
+
 /modules/services/udiskie.nix                         @rycee
 
 /modules/services/unison.nix                          @pacien

@@ -115,4 +115,10 @@
     githubId = 56614642;
     name = "Ilan Joselevich";
   };
+  mager = {
+    email = "andreas@mager.eu";
+    github = "AndreasMager";
+    githubId = 5646732;
+    name = "Andreas Mager";
+  };
 }
