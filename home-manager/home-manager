@@ -82,18 +82,19 @@ function setFlakeAttribute() {
 
     if [[ -n "$FLAKE_ARG" ]]; then
         local flake="${FLAKE_ARG%#*}"
+        local name
         case $FLAKE_ARG in
             *#*)
-                local name="${FLAKE_ARG#*#}"
+                name="${FLAKE_ARG#*#}"
             ;;
             *)
-                local name="$USER@$(hostname)"
+                name="$USER@$(hostname)"
                 if [ "$(nix eval "$flake#homeConfigurations" --apply "x: x ? \"$name\"")" = "false" ]; then
                     name="$USER"
                 fi
             ;;
         esac
-        export FLAKE_CONFIG_URI="$flake#homeConfigurations.\"$name\""
+        export FLAKE_CONFIG_URI="$flake#homeConfigurations.$name"
     fi
 }
 
@@ -252,7 +253,7 @@ function doBuild() {
         nix build \
             "${PASSTHROUGH_OPTS[@]}" \
              ${DRY_RUN+--dry-run} \
-            "$FLAKE_CONFIG_URI.activationPackage" \
+            "'$FLAKE_CONFIG_URI.activationPackage'" \
             || exitCode=1
         return $exitCode
     fi
@@ -338,7 +339,7 @@ function doRmGenerations() {
             errorEcho "Cannot remove the current generation $generationId"
         else
             echo Removing generation $generationId
-            $DRY_RUN_CMD rm $VERBOSE_ARG $linkName
+            $DRY_RUN_CMD rm "$VERBOSE_ARG" "$linkName"
         fi
     done
 
@@ -346,7 +347,7 @@ function doRmGenerations() {
 }
 
 function doRmAllGenerations() {
-    $DRY_RUN_CMD rm $VERBOSE_ARG \
+    $DRY_RUN_CMD rm "$VERBOSE_ARG" \
         "$NIX_STATE_DIR/profiles/per-user/$USER/home-manager"*
 }
 
@@ -463,9 +464,9 @@ function doUninstall() {
             doSwitch
             $DRY_RUN_CMD nix-env -e home-manager-path || true
             rm "$HOME_MANAGER_CONFIG"
-            $DRY_RUN_CMD rm $VERBOSE_ARG -r \
+            $DRY_RUN_CMD rm "$VERBOSE_ARG" -r \
                 "${XDG_DATA_HOME:-$HOME/.local/share}/home-manager"
-            $DRY_RUN_CMD rm $VERBOSE_ARG \
+            $DRY_RUN_CMD rm "$VERBOSE_ARG" \
                 "$NIX_STATE_DIR/gcroots/per-user/$USER/current-home"
             ;;
         *)
@@ -695,3 +696,4 @@ case $COMMAND in
         exit 1
         ;;
 esac
+
