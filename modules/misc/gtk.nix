@@ -173,7 +173,9 @@ in {
       in ''
         DISPLAY=":0" $DRY_RUN_CMD ${xsettingsd} -c \
         <( echo "Net/ThemeName \"${cfg.theme.name}\"" ) & \
-        kill $! || true
+        process=$!
+        sleep 0.2 && kill $process || true
+        unset process
       '';
     };
 
