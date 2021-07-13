@@ -61,7 +61,7 @@ in {
           PartOf = [ "tray.target" ];
         };
 
-        Install = { WantedBy = [ "tray.target" ]; };
+        Install.WantedBy = [ "tray.target" ];
 
         Service = {
           ExecStart = "${cfg.package}/bin/trayer ${parameter}";
