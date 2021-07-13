@@ -70,18 +70,5 @@ in {
       };
     }
 
-    (mkIf (cfg.config != { }) {
-      home.file.".trayer.conf".text = let
-        valueToString = v:
-          if isBool v then
-            (if v then "true" else "false")
-          else if (v == null) then
-            "none"
-          else
-            "${toString v}";
-      in concatStrings
-      (mapAttrsToList (k: v: "--${k} ${valueToString v} ") cfg.config);
-    })
-
   ]);
 }
