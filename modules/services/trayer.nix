@@ -4,6 +4,82 @@ with lib;
 
 let
 
+  boolTrue = {
+         type = types.bool;
+         values = "true|false";
+         default = "true";
+  };
+  number0 = {
+         type = types.int;
+         values = "number";
+         default = "0";
+  };
+  knownSettings = {
+          edge = {
+            type = types.str;
+            values = "left|right|top|bottom|none";
+            default = "bottom";
+          };
+          align = {
+            type = types.str;
+            values = "left|right|center";
+            default = "center";
+          };
+          margin = number0;
+          widthtype = {
+            type = types.str;
+            values = "request|pixel|percent";
+            default = "percent";
+          };
+          width = {
+            type = types.int;
+            values = "number";
+            default = "100";
+          };
+          heighttype = {
+            type = types.str;
+            values = "request|pixel";
+            default = "pixel";
+          };
+          height = {
+            type = types.int;
+            values = "number";
+            default = "26";
+          };
+          SetDockType = boolTrue;
+          SetPartialStrut = boolTrue;
+          transparent = {
+            type = types.bool;
+            values = "true|false";
+            default = "false";
+          };
+          alpha = {
+            type = types.int;
+            values = "number";
+            default = "127";
+          };
+          tint = {
+            type = types.str;
+            values = "int";
+            default = "0xFFFFFFFF";
+          };
+          distance = number0;
+          distancefrom = {
+            type = types.str;
+            values = "left|right|top|bottom";
+            default = "top";
+          };
+          expand = boolTrue;
+          padding = number0;
+          monitor = {
+            values = "number|primary";
+            type = types.str;
+            default = "0";
+          };
+          iconspacing = number0;
+     };
+/*
+*/
   cfg = config.services.trayer;
 
 in {
@@ -25,27 +101,26 @@ in {
       config = mkOption {
         type = with types; attrsOf (nullOr (either str (either bool int)));
         description = ''
-          Trayer configuration as a set of attributes. 
+          Trayer configuration as a set of attributes.
           Details for trayer can be found here: https://github.com/sargon/trayer-srg
-          
-          edge       <left|right|top|bottom|none> (default:bottom)
-          align      <left|right|center>          (default:center)
-          margin     <number>                     (default:0)
-          widthtype  <request|pixel|percent>      (default:percent)
-          width      <number>                     (default:100)
-          heighttype <request|pixel>              (default:pixel)
-          height     <number>                     (default:26)
-          SetDockType     <true|false>            (default:true)
-          SetPartialStrut <true|false>            (default:true)
-          transparent     <true|false>            (default:false)
-          alpha      <number>                     (default:127)
-          tint       <int>                        (default:0xFFFFFFFF)
-          distance   <number>                     (default:0)
-          distancefrom <left|right|top|bottom>    (default:top)
-          expand     <false|true>                 (default:true)
-          padding    <number>                     (default:0)
-          monitor    <number|primary>             (default:0)
-          iconspacing <number>                    (default:0)    
+          <informaltable frame="none">
+          <tgroup cols="4">
+          <tbody>
+          <row>
+          <entry>proprety name</entry>
+          <entry>type</entry>
+          <entry>values</entry>
+          <entry>default</entry>
+          </row>
+          ${concatStringsSep "\n" (mapAttrsToList (n: v: ''
+            <row>
+              <entry><varname>${n}</varname></entry>
+              <entry>${v.type.description}</entry>
+              <entry>${v.values}</entry>
+              <entry>${v.default}</entry>
+            </row>
+          '') knownSettings)}
+          </tbody></tgroup></informaltable>
         '';
         default = { };
         defaultText = literalExample "{ }";
@@ -64,7 +139,7 @@ in {
   config = mkIf cfg.enable (
     {
       home.packages = [ cfg.package ];
-
+ home.enableNixpkgsReleaseCheck = false;
       systemd.user.services.trayer = let
         parameter = let
           valueToString = v:
