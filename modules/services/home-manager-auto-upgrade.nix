@@ -2,7 +2,7 @@
 
 let
 
-  cfg = config.services.home-manager-auto-upgrade;
+  cfg = config.services.home-manager.auto-upgrade;
 
 in {
   meta.maintainers = [ lib.maintainers.pinage404 ];
