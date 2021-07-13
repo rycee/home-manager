@@ -52,7 +52,13 @@ in {
         };
 
         Service = {
-          ExecStart = "${pkgs.home-manager}/bin/home-manager switch";
+          ExecStart = toString
+            (pkgs.writeShellScript "home-manager-auto-upgrade" ''
+              echo "Update Nix's channels"
+              ${pkgs.nix}/bin/nix-channel --update
+              echo "Upgrade Home Manager"
+              ${pkgs.home-manager}/bin/home-manager switch
+            '');
         };
       };
     };
