@@ -70,8 +70,6 @@ in {
           valueToString = v:
             if isBool v then
               (if v then "true" else "false")
-            else if (v == null) then
-              "none"
             else
               "${toString v}";
         in concatStrings
