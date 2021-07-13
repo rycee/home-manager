@@ -1,0 +1,63 @@
+{ config, lib, pkgs, ... }:
+
+let
+
+  cfg = config.services.home-manager.auto-upgrade;
+
+in {
+  meta.maintainers = [ lib.maintainers.pinage404 ];
+
+  options = {
+    services.home-manager.auto-upgrade = {
+      enable = lib.mkEnableOption ''
+        Home Manager upgrade service that periodically updates your nix channels before
+        running `home-manager switch`
+      '';
+
+      frequency = lib.mkOption {
+        type = lib.types.str;
+        default = "12:30";
+        example = "weekly";
+        description = ''
+          How often or when Home Manager is run.
+          This value is passed to the SystemD timer configuration as the OnCalendar option.
+          The format is described in
+          <citerefentry>
+            <refentrytitle>systemd.time</refentrytitle>
+            <manvolnum>7</manvolnum>
+          </citerefentry>.
+        '';
+      };
+    };
+  };
+
+  config = lib.mkIf cfg.enable {
+    systemd.user = {
+      timers.home-manager-auto-upgrade = {
+        Unit = { Description = "Home-Manager upgrade timer"; };
+
+        Install = { WantedBy = [ "timers.target" ]; };
+
+        Timer = {
+          OnCalendar = cfg.frequency;
+          Unit = "home-manager-auto-upgrade.service";
+          Persistent = true;
+        };
+      };
+
+      services.home-manager-auto-upgrade = {
+        Unit = { Description = "Home-Manager upgrade"; };
+
+        Service = {
+          ExecStart = toString
+            (pkgs.writeShellScript "home-manager-auto-upgrade" ''
+              echo "Update Nix's channels"
+              ${pkgs.nix}/bin/nix-channel --update
+              echo "Upgrade Home Manager"
+              ${pkgs.home-manager}/bin/home-manager switch
+            '');
+        };
+      };
+    };
+  };
+}
