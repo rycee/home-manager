@@ -28,6 +28,7 @@ in {
           Trayer configuration as a set of attributes.
         '';
         default = { };
+        defaultText = literalExample "{ }";
         example = literalExample ''
           {
             edge = "top";
