@@ -25,7 +25,27 @@ in {
       config = mkOption {
         type = with types; attrsOf (nullOr (either str (either bool int)));
         description = ''
-          Trayer configuration as a set of attributes.
+          Trayer configuration as a set of attributes. 
+          Details for trayer can be found here: https://github.com/sargon/trayer-srg
+          
+          edge       <left|right|top|bottom|none> (default:bottom)
+          align      <left|right|center>          (default:center)
+          margin     <number>                     (default:0)
+          widthtype  <request|pixel|percent>      (default:percent)
+          width      <number>                     (default:100)
+          heighttype <request|pixel>              (default:pixel)
+          height     <number>                     (default:26)
+          SetDockType     <true|false>            (default:true)
+          SetPartialStrut <true|false>            (default:true)
+          transparent     <true|false>            (default:false)
+          alpha      <number>                     (default:127)
+          tint       <int>                        (default:0xFFFFFFFF)
+          distance   <number>                     (default:0)
+          distancefrom <left|right|top|bottom>    (default:top)
+          expand     <false|true>                 (default:true)
+          padding    <number>                     (default:0)
+          monitor    <number|primary>             (default:0)
+          iconspacing <number>                    (default:0)    
         '';
         default = { };
         defaultText = literalExample "{ }";
