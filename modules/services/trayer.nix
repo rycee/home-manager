@@ -12,7 +12,7 @@ in {
   options = {
     services.trayer = {
       enable =
-        mkEnableOption "trayer the lightweight GTK2+ systray for UNIX desktops";
+        mkEnableOption "trayer, the lightweight GTK2+ systray for UNIX desktops";
 
       package = mkOption {
         default = pkgs.trayer;
