@@ -46,10 +46,7 @@ in {
       };
 
       services.home-manager-auto-upgrade = {
-        Unit = {
-          Description = "Home-Manager upgrade";
-          After = [ "default.target" ];
-        };
+        Unit = { Description = "Home-Manager upgrade"; };
 
         Service = {
           ExecStart = toString
