@@ -10,8 +10,8 @@ in {
   options = {
     services.home-manager.auto-upgrade = {
       enable = lib.mkEnableOption ''
-        Home Manager upgrade
-        Service that run `home-manager switch` periodically with a SystemD's service
+        Home Manager upgrade service that periodically updates your nix channels before
+        running `home-manager switch`
       '';
 
       frequency = lib.mkOption {
