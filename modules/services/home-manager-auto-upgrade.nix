@@ -8,7 +8,7 @@ in {
   meta.maintainers = [ lib.maintainers.pinage404 ];
 
   options = {
-    services.home-manager-auto-upgrade = {
+    services.home-manager.auto-upgrade = {
       enable = lib.mkEnableOption ''
         Home Manager upgrade
         Service that run `home-manager switch` periodically with a SystemD's service
