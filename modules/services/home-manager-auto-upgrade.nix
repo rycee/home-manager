@@ -48,8 +48,7 @@ in {
       services.home-manager-auto-upgrade = {
         Unit = {
           Description = "Home-Manager upgrade";
-          After = [ "network-online.target" ];
-          Wants = [ "network-online.target" ];
+          After = [ "default.target" ];
         };
 
         Service = {
