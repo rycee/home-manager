@@ -28,12 +28,14 @@ in {
           Trayer configuration as a set of attributes.
         '';
         default = { };
-        example = {
-          edge = "top";
-          padding = 6;
-          SetDockType = true;
-          tint = "0x282c34";
-        };
+        example = literalExample ''
+          {
+            edge = "top";
+            padding = 6;
+            SetDockType = true;
+            tint = "0x282c34";
+          }
+        '';
       };
     };
   };
