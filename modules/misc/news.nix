@@ -2132,7 +2132,8 @@ in
         message = ''
           A new module is available: 'services.home-manager-auto-upgrade'.
 
-          Service that run `home-manager switch` periodically with a SystemD's service
+          Home Manager upgrade service that periodically updates your nix channels before
+          running `home-manager switch`
         '';
       }
     ];
