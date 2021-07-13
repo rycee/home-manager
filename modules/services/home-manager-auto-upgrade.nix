@@ -41,6 +41,7 @@ in {
         Timer = {
           OnCalendar = cfg.frequency;
           Unit = "home-manager-auto-upgrade.service";
+          Persistent = true;
         };
       };
 
