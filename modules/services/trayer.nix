@@ -5,81 +5,79 @@ with lib;
 let
 
   boolTrue = {
-         type = types.bool;
-         values = "true|false";
-         default = "true";
+    type = types.bool;
+    values = "true|false";
+    default = "true";
   };
   number0 = {
-         type = types.int;
-         values = "number";
-         default = "0";
+    type = types.int;
+    values = "number";
+    default = "0";
   };
   knownSettings = {
-          edge = {
-            type = types.str;
-            values = "left|right|top|bottom|none";
-            default = "bottom";
-          };
-          align = {
-            type = types.str;
-            values = "left|right|center";
-            default = "center";
-          };
-          margin = number0;
-          widthtype = {
-            type = types.str;
-            values = "request|pixel|percent";
-            default = "percent";
-          };
-          width = {
-            type = types.int;
-            values = "number";
-            default = "100";
-          };
-          heighttype = {
-            type = types.str;
-            values = "request|pixel";
-            default = "pixel";
-          };
-          height = {
-            type = types.int;
-            values = "number";
-            default = "26";
-          };
-          SetDockType = boolTrue;
-          SetPartialStrut = boolTrue;
-          transparent = {
-            type = types.bool;
-            values = "true|false";
-            default = "false";
-          };
-          alpha = {
-            type = types.int;
-            values = "number";
-            default = "127";
-          };
-          tint = {
-            type = types.str;
-            values = "int";
-            default = "0xFFFFFFFF";
-          };
-          distance = number0;
-          distancefrom = {
-            type = types.str;
-            values = "left|right|top|bottom";
-            default = "top";
-          };
-          expand = boolTrue;
-          padding = number0;
-          monitor = {
-            values = "number|primary";
-            type = types.str;
-            default = "0";
-          };
-          iconspacing = number0;
-     };
-/*
-*/
+    edge = {
+      type = types.str;
+      values = "left|right|top|bottom|none";
+      default = "bottom";
+    };
+    align = {
+      type = types.str;
+      values = "left|right|center";
+      default = "center";
+    };
+    margin = number0;
+    widthtype = {
+      type = types.str;
+      values = "request|pixel|percent";
+      default = "percent";
+    };
+    width = {
+      type = types.int;
+      values = "number";
+      default = "100";
+    };
+    heighttype = {
+      type = types.str;
+      values = "request|pixel";
+      default = "pixel";
+    };
+    height = {
+      type = types.int;
+      values = "number";
+      default = "26";
+    };
+    SetDockType = boolTrue;
+    SetPartialStrut = boolTrue;
+    transparent = {
+      type = types.bool;
+      values = "true|false";
+      default = "false";
+    };
+    alpha = {
+      type = types.int;
+      values = "number";
+      default = "127";
+    };
+    tint = {
+      type = types.str;
+      values = "int";
+      default = "0xFFFFFFFF";
+    };
+    distance = number0;
+    distancefrom = {
+      type = types.str;
+      values = "left|right|top|bottom";
+      default = "top";
+    };
+    expand = boolTrue;
+    padding = number0;
+    monitor = {
+      values = "number|primary";
+      type = types.str;
+      default = "0";
+    };
+    iconspacing = number0;
+  };
   cfg = config.services.trayer;
 
 in {
@@ -87,8 +85,8 @@ in {
 
   options = {
     services.trayer = {
-      enable =
-        mkEnableOption "trayer, the lightweight GTK2+ systray for UNIX desktops";
+      enable = mkEnableOption
+        "trayer, the lightweight GTK2+ systray for UNIX desktops";
 
       package = mkOption {
         default = pkgs.trayer;
@@ -136,32 +134,27 @@ in {
     };
   };
 
-  config = mkIf cfg.enable (
-    {
-      home.packages = [ cfg.package ];
- home.enableNixpkgsReleaseCheck = false;
-      systemd.user.services.trayer = let
-        parameter = let
-          valueToString = v:
-            if isBool v then
-              (if v then "true" else "false")
-            else
-              "${toString v}";
-        in concatStrings
-        (mapAttrsToList (k: v: "--${k} ${valueToString v} ") cfg.config);
-      in {
-        Unit = {
-          Description = "trayer -- lightweight GTK2+ systray for UNIX desktops";
-          PartOf = [ "tray.target" ];
-        };
-
-        Install.WantedBy = [ "tray.target" ];
-
-        Service = {
-          ExecStart = "${cfg.package}/bin/trayer ${parameter}";
-          Restart = "on-failure";
-        };
+  config = mkIf cfg.enable ({
+    home.packages = [ cfg.package ];
+    home.enableNixpkgsReleaseCheck = false;
+    systemd.user.services.trayer = let
+      parameter = let
+        valueToString = v:
+          if isBool v then (if v then "true" else "false") else "${toString v}";
+      in concatStrings
+      (mapAttrsToList (k: v: "--${k} ${valueToString v} ") cfg.config);
+    in {
+      Unit = {
+        Description = "trayer -- lightweight GTK2+ systray for UNIX desktops";
+        PartOf = [ "tray.target" ];
       };
-    }
-  );
+
+      Install.WantedBy = [ "tray.target" ];
+
+      Service = {
+        ExecStart = "${cfg.package}/bin/trayer ${parameter}";
+        Restart = "on-failure";
+      };
+    };
+  });
 }
