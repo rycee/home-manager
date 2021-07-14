@@ -136,7 +136,6 @@ in {
 
   config = mkIf cfg.enable ({
     home.packages = [ cfg.package ];
-    home.enableNixpkgsReleaseCheck = false;
     systemd.user.services.trayer = let
       parameter = let
         valueToString = v:
@@ -146,10 +145,10 @@ in {
     in {
       Unit = {
         Description = "trayer -- lightweight GTK2+ systray for UNIX desktops";
-        PartOf = [ "tray.target" ];
+        PartOf = [ "tray.target" "graphical-session.target" ];
       };
 
-      Install.WantedBy = [ "tray.target" ];
+      Install.WantedBy = [ "graphical-session.target" ];
 
       Service = {
         ExecStart = "${cfg.package}/bin/trayer ${parameter}";
