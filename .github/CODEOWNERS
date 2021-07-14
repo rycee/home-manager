@@ -225,6 +225,8 @@
 
 /modules/services/dunst.nix                           @rycee
 
+/modules/services/easyeffects.nix                     @fufexan
+
 /modules/services/emacs.nix                           @tadfisher
 
 /modules/services/etesync-dav.nix                     @Valodim

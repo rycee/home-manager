@@ -2125,6 +2125,16 @@ in
           A new module is available: 'programs.sm64ex'.
         '';
       }
+
+      {
+        time = "2021-07-14T16:27:51+00:00";
+        condition = hostPlatform.isLinux;
+        message = ''
+          The 'services.pulseeffects.package' option has been removed. The
+          PipeWire equivalent of the 'services.pulseeffects' module is
+          'services.easyeffects'.
+        '';
+      }
     ];
   };
 }
