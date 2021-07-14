@@ -164,6 +164,7 @@ let
     (loadModule ./services/dropbox.nix { condition = hostPlatform.isLinux; })
     (loadModule ./services/dunst.nix { })
     (loadModule ./services/dwm-status.nix { condition = hostPlatform.isLinux; })
+    (loadModule ./services/easyeffects.nix { condition = hostPlatform.isLinux; })
     (loadModule ./services/emacs.nix { condition = hostPlatform.isLinux; })
     (loadModule ./services/etesync-dav.nix { condition = hostPlatform.isLinux; })
     (loadModule ./services/flameshot.nix { })

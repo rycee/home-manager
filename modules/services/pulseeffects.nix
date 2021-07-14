@@ -16,10 +16,9 @@ in {
 
     package = mkOption {
       type = types.package;
-      default = pkgs.pulseeffects;
-      defaultText = literalExample "pkgs.pulseeffects";
+      default = pkgs.pulseeffects-legacy;
+      defaultText = literalExample "pkgs.pulseeffects-legacy";
       description = "Pulseeffects package to use.";
-      example = literalExample "pkgs.pulseeffects-pw";
     };
 
     preset = mkOption {
