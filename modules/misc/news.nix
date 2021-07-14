@@ -2125,6 +2125,13 @@ in
           A new module is available: 'programs.sm64ex'.
         '';
       }
+
+      {
+        time = "2021-07-13T00:24:00+00:00";
+        message = ''
+          A new module is available: 'services.trayer'.
+        '';
+      }
     ];
   };
 }
