@@ -4,8 +4,8 @@
   config = {
     programs.ncmpcpp.enable = true;
 
-    services.mpd.enable = true;
-    services.mpd.musicDirectory = "/home/user/music";
+    services.mpd.daemons.default.enable = true;
+    services.mpd.daemons.default.musicDirectory = "/home/user/music";
 
     nixpkgs.overlays = [
       (self: super: {
