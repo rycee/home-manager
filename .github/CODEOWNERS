@@ -194,6 +194,8 @@
 /modules/programs/topgrade.nix                        @msfjarvis
 /tests/modules/programs/topgrade                      @msfjarvis
 
+/modules/programs/vivid.nix                           @noib3
+
 /modules/programs/waybar.nix                          @berbiche
 /tests/modules/programs/waybar                        @berbiche
 

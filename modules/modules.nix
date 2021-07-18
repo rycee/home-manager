@@ -6,7 +6,7 @@
   # Whether to enable module type checking.
 , check ? true
 
-# If disabled, the pkgs attribute passed to this function is used instead.
+  # If disabled, the pkgs attribute passed to this function is used instead.
 , useNixpkgsModule ? true
 }:
 
@@ -127,7 +127,7 @@ let
     (loadModule ./programs/rbw.nix { })
     (loadModule ./programs/readline.nix { })
     (loadModule ./programs/rofi.nix { })
-    (loadModule ./programs/rofi-pass.nix {  })
+    (loadModule ./programs/rofi-pass.nix { })
     (loadModule ./programs/rtorrent.nix { })
     (loadModule ./programs/scmpuff.nix { })
     (loadModule ./programs/senpai.nix { })
@@ -144,6 +144,7 @@ let
     (loadModule ./programs/topgrade.nix { })
     (loadModule ./programs/urxvt.nix { })
     (loadModule ./programs/vim.nix { })
+    (loadModule ./programs/vivid.nix { })
     (loadModule ./programs/vscode.nix { })
     (loadModule ./programs/vscode/haskell.nix { })
     (loadModule ./programs/waybar.nix { condition = hostPlatform.isLinux; })
@@ -250,7 +251,8 @@ let
         if versionAtLeast config.home.stateVersion "20.09" then
           pkgs.path
         else
-          <nixpkgs>);
+          <nixpkgs>
+      );
       _module.args.pkgs = lib.mkDefault pkgs;
       _module.check = check;
       lib = lib.hm;
@@ -261,4 +263,4 @@ let
 
 in
 
-  modules ++ [ pkgsModule ]
+modules ++ [ pkgsModule ]
