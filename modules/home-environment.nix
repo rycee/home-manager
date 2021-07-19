@@ -229,7 +229,30 @@ in
 
     home.sessionVariables = mkOption {
       default = {};
-      type = types.attrs;
+      type = types.submodule {
+        freeformType = with types;
+          lazyAttrsOf (oneOf [ package str int float ]);
+
+        options = {
+          PATH = mkOption {
+            type = types.envVar;
+            default = "$PATH";
+            defaultText = literalExample ''"$PATH"'';
+            description = ''
+              Content of the <envar>PATH</envar> variable.
+            '';
+          };
+
+          NIX_PATH = mkOption {
+            type = types.envVar;
+            default = "$NIX_PATH";
+            defaultText = literalExample ''"$NIX_PATH"'';
+            description = ''
+              Content of the <envar>NIX_PATH</envar> variable.
+            '';
+          };
+        };
+      };
       example = { EDITOR = "emacs"; GS_OPTIONS = "-sPAPERSIZE=a4"; };
       description = ''
         Environment variables to always set at login.
@@ -496,7 +519,7 @@ in
             if [ -n "$__HM_SESS_VARS_SOURCED" ]; then return; fi
             export __HM_SESS_VARS_SOURCED=1
 
-            ${config.lib.shell.exportAll cfg.sessionVariables}
+            ${config.lib.shell.exportAll' { colonVars = ["NIX_PATH" "PATH"]; } cfg.sessionVariables}
           '' + lib.optionalString (cfg.sessionPath != [ ]) ''
             export PATH="$PATH''${PATH:+:}${concatStringsSep ":" cfg.sessionPath}"
           '' + cfg.sessionVariablesExtra;
