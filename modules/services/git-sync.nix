@@ -43,7 +43,7 @@ in {
       };
 
       repositories = mkOption {
-        description = "A list of objects describing repositories that should be synced";
+        description = "A list of objects describing repositories that should be synced.";
         type = with types;
           listOf (submodule {
             options = {
