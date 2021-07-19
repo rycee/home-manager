@@ -31,7 +31,7 @@ in {
 
   options = {
     services.git-sync = {
-      enable = mkEnableOption "Enable git-sync services";
+      enable = mkEnableOption "git-sync services";
 
       package = mkOption {
         type = types.package;
