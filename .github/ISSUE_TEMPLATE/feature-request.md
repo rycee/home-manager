@@ -3,7 +3,7 @@ name: Feature request
 about: Ask for a new feature to be added (module, program, etc.)
 title: ''
 labels: feature request
-assignees: nix-community/home-manager
+assignees: rycee, berbiche, sumnerevans
 
 ---
 
