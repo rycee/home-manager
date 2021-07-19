@@ -320,6 +320,9 @@ in your Home Manager configuration.
 Nix Flakes
 ----------
 
+As a NixOS module
+-----------------
+
 Home Manager includes a `flake.nix` file for compatibility with [Nix Flakes][]
 for those that wish to use it as a module. A bare-minimum `flake.nix` would be
 as follows:
@@ -358,6 +361,62 @@ Note, the Home Manager library is exported by the flake under
 When using flakes, switch to new configurations as you do for the
 whole system (e. g. `nixos-rebuild switch --flake <path>`) instead of
 using the `home-manager` command line tool.
+
+For unprivileged setup
+----------------------
+
+If you would like to set up Home Manager as an unprivileged user:
+1.  Place `flake.nix` under `~/.config/nixpkgs/`
+
+    ```Nix
+    {
+      description = "Home Manager configuration of Jane Doe";
+    
+      inputs = {
+        home-manager.url = "github:nix-community/home-manager";
+        # Optional, get in sync with the desired nixpkgs source
+        nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+        home-manager.inputs.nixpkgs.follows = "nixpkgs";
+      };
+    
+      outputs = { home-manager, ... }:
+        let
+          system = "x86_64-linux";
+          username = "jdoe";
+        in {
+          homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
+            configuration = import ./home.nix;
+            inherit system username;
+            homeDirectory = "/home/${username}";
+            # Update the state version as needed.
+            # See the changelog here: https://nix-community.github.io/home-manager/release-notes.html#sec-release-21.05
+            stateVersion = "21.05";
+            # # Pass extra arguments into home.nix using
+            # extraSpecialArgs = {
+            #   key = value;
+            # };
+          };
+      };
+    }
+    ```
+    *   If you would like to use the `release-21.05` branch, change the `home-manager` input url to `github:nix-community/home-manager/release-21.05` and `nixpkgs` url to `github:NixOS/nixpkgs/nixos-21.05`.
+
+2.  Since the release `21.05`, building the configuration that resides in `~/.config/nixpkgs` is as simple as
+
+    ```console
+    $ home-manager switch --flake '~/.config/nixpkgs#jdoe'
+    ```
+
+    where `jdoe` is a configuration specified in the flake file `~/.config/nixpkgs/flake.nix`.
+
+
+The flake inputs are not upgraded automatically when switching.
+The analogy to the command `home-manager --update ...` is `nix flake update`.
+
+If updating more than one input is undesirable, the command `nix flake lock --update-input <input-name>` can be used.
+
+You can also pass flake-related options such as `--recreate-lock-file` or `--update-input [input]`
+to `home-manager` when building/switching, and these options will be forwarded to `nix build`.
 
 Releases
 --------
