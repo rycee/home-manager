@@ -19,4 +19,6 @@
   #  /nix/store/da…g5-home-manager-path/lib/fontconfig/cache: invalid cache file: 786068e7df13f7c2105017ef3d78e351-x86_64.cache-7
   #  /nix/store/da…g5-home-manager-path/lib/fontconfig/cache: invalid cache file: 4766193978ddda4bd196f2b98c00fb00-x86_64.cache-7
   #fontconfig-multiple-font-packages = ./multiple-font-packages.nix;
+  fontconfig-simple = ./simple.nix;
+  fontconfig-complex = ./complex.nix;
 }

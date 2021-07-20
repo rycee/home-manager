@@ -6,7 +6,7 @@ let
 
   cfg = config.home-manager;
 
-  extendedLib = import ../modules/lib/stdlib-extended.nix pkgs.lib;
+  extendedLib = import ../modules/lib/stdlib-extended.nix pkgs;
 
   hmModule = types.submoduleWith {
     specialArgs = {

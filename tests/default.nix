@@ -2,7 +2,7 @@
 
 let
 
-  lib = import ../modules/lib/stdlib-extended.nix pkgs.lib;
+  lib = import ../modules/lib/stdlib-extended.nix pkgs;
 
   nmt = pkgs.fetchFromGitLab {
     owner = "rycee";

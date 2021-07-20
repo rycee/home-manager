@@ -21,7 +21,7 @@ let
     in
       fold f res res.config.warnings;
 
-  extendedLib = import ./lib/stdlib-extended.nix pkgs.lib;
+  extendedLib = import ./lib/stdlib-extended.nix pkgs;
 
   hmModules =
     import ./modules.nix {
