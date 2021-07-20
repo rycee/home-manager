@@ -43,8 +43,15 @@ in {
           in
             "''${xmonad}/bin/xmonad";
         '';
+        default = ''test -n "$1" && eval "$@"'';
         description = ''
-          Window manager start command.
+          Window manager start command. The default value handles
+          display-manager parameter from <code>de+wm.desktop</code>. If you use
+          home-manager to config your window manager on NixOS, you have to
+          handle extra actions from
+          <code>services.xserver.displayManager.session.start</code> on NixOS by
+          yourself, such as background setting, through
+          <code>xsession.initExtra</code>.
         '';
       };
 
