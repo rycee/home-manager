@@ -1,0 +1,56 @@
+name: Update flake inputs
+on:
+  schedule:
+    # Update every Sunday and Wednesday
+    - cron: "51 3 * * 0,3"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: cachix/install-nix-action@v13
+        with:
+          install_url: https://github.com/numtide/nix-unstable-installer/releases/download/nix-2.4pre20210415_76980a1/install
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      - name: Prepare flakebot branch
+        run: |
+          git config --local user.email "flakebot@users.noreply.github.com"
+          git config --local user.name "flakebot"
+          git checkout -B flake-update
+      - name: Update & commit lockfile
+        run: |
+          nix flake update --commit-lock-file
+          echo "commit_info<<EOF" >> $GITHUB_ENV
+          git log --format=%B -1 >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+          # Get the latest commit hash so we can compare
+          echo "commit_id<<EOF" >> $GITHUB_ENV
+          git rev-parse HEAD
+          echo "EOF" >> $GITHUB_ENV
+      - name: Push changes
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          # Use a custom token so we can trigger other workflows upon push to master
+          github_token: ${{ secrets.FLAKEBOT_TOKEN }}
+          branch: flake-update
+          force: true
+      - name: pull-request-action
+        uses: vsoch/pull-request-action@1.0.15
+        if: ${{ env.commit_id != github.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLAKEBOT_TOKEN }}
+          PULL_REQUEST_FROM_BRANCH: flake-update
+          PULL_REQUEST_BRANCH: master
+          PULL_REQUEST_UPDATE: true
+          PULL_REQUEST_TITLE: "[`automation`] Update flake inputs"
+          PULL_REQUEST_BODY: |
+            This is an automated pull request to update this flake's inputs.
+            ```
+            ${{ env.commit_info }}
+            ```

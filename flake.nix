@@ -1,6 +1,8 @@
 {
   description = "Home Manager for Nix";
 
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+
   outputs = { self, nixpkgs }:
     let
       # List of systems supported by home-manager binary
@@ -29,10 +31,9 @@
         hm = import ./modules/lib { lib = nixpkgs.lib; };
         homeManagerConfiguration = { configuration, system, homeDirectory
           , username, extraModules ? [ ], extraSpecialArgs ? { }
-          , pkgs ? builtins.getAttr system nixpkgs.outputs.legacyPackages
-          , check ? true, stateVersion ? "20.09" }@args:
+          , pkgs ? nixpkgsFor.${system}, check ? true, stateVersion ? "20.09"
+          }@args:
           assert nixpkgs.lib.versionAtLeast stateVersion "20.09";
-
           import ./modules {
             inherit pkgs check extraSpecialArgs;
             configuration = { ... }: {
