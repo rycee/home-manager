@@ -373,6 +373,16 @@ in
       description = "The package containing the complete activation script.";
     };
 
+    home.extraActivationPath = mkOption {
+      internal = true;
+      type = types.listOf types.package;
+      default = [ ];
+      description = ''
+        Extra packages to add to <envar>PATH</envar> within the activation
+        script.
+      '';
+    };
+
     home.extraBuilderCommands = mkOption {
       type = types.lines;
       default = "";
@@ -570,15 +580,17 @@ in
 
         # Programs that always should be available on the activation
         # script's PATH.
-        activationBinPaths = lib.makeBinPath [
-          pkgs.bash
-          pkgs.coreutils
-          pkgs.diffutils        # For `cmp` and `diff`.
-          pkgs.findutils
-          pkgs.gnugrep
-          pkgs.gnused
-          pkgs.ncurses          # For `tput`.
-        ]
+        activationBinPaths = lib.makeBinPath (
+          [
+            pkgs.bash
+            pkgs.coreutils
+            pkgs.diffutils        # For `cmp` and `diff`.
+            pkgs.findutils
+            pkgs.gnugrep
+            pkgs.gnused
+            pkgs.ncurses          # For `tput`.
+          ] ++ config.home.extraActivationPath
+        )
         + optionalString (!cfg.emptyActivationPath) "\${PATH:+:}$PATH";
 
         activationScript = pkgs.writeShellScript "activation-script" ''
