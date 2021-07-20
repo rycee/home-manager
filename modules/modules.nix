@@ -161,6 +161,7 @@ let
     ./services/flameshot.nix
     ./services/fluidsynth.nix
     ./services/getmail.nix
+    ./services/git-sync.nix
     ./services/gnome-keyring.nix
     ./services/gpg-agent.nix
     ./services/grobi.nix
