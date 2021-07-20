@@ -211,6 +211,7 @@ let
     ./services/udiskie.nix
     ./services/unclutter.nix
     ./services/unison.nix
+    ./services/volnoti.nix
     ./services/window-managers/awesome.nix
     ./services/window-managers/bspwm/default.nix
     ./services/window-managers/i3-sway/i3.nix

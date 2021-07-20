@@ -4,7 +4,7 @@
 
 /modules/home-environment.nix                         @rycee
 
-/modules/i18n/input-method		                @Kranzes
+/modules/i18n/input-method                            @Kranzes
 /tests/modules/i18n/input-method                      @Kranzes
 
 /modules/misc/dconf.nix                               @gnidorah @rycee
@@ -339,3 +339,5 @@
 /modules/xresources.nix                               @rycee
 
 /modules/xsession.nix                                 @rycee
+
+/modules/services/volnoti.nix                         @IvanMalison
