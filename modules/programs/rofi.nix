@@ -410,6 +410,15 @@ in {
           Cannot use the rofi options 'theme' and 'colors' simultaneously.
         '';
       }
+      (hm.assertions.assertPlatform "programs.rofi" pkgs platforms.linux)
+      {
+        assertion = (!builtins.hasAttr "override" cfg.package)
+          || (cfg.plugins == [ ])
+          || (cfg.package.override.__functionArgs ? plugins);
+        message = ''
+          Cannot use provided package with plugins.
+        '';
+      }
     ];
 
     lib.formats.rasi.mkLiteral = value: {
@@ -420,7 +429,8 @@ in {
     home.packages = let
       rofiWithPlugins = cfg.package.override
         (old: rec { plugins = (old.plugins or [ ]) ++ cfg.plugins; });
-      rofiPackage = if builtins.hasAttr "override" cfg.package then
+      rofiPackage = if builtins.hasAttr "override" cfg.package
+      && cfg.package.override.__functionArgs ? plugins then
         rofiWithPlugins
       else
         cfg.package;
