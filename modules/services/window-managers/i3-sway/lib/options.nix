@@ -165,7 +165,9 @@ let
 
       statusCommand = mkNullableOption {
         type = types.str;
-        default = "${pkgs.i3status}/bin/i3status";
+        default = "${config.programs.i3status.package}/bin/i3status";
+        defaultText = literalExample
+          ''"''${config.programs.i3status.package}/bin/i3status"'';
         description = "Command that will be used to get status lines.";
       };
 
@@ -667,7 +669,7 @@ in {
       position = "bottom";
       workspaceButtons = true;
       workspaceNumbers = true;
-      statusCommand = "${pkgs.i3status}/bin/i3status";
+      statusCommand = "${config.programs.i3status.package}/bin/i3status";
       fonts = {
         names = [ "monospace" ];
         size = 8.0;

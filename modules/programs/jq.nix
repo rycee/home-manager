@@ -34,7 +34,7 @@ in {
         type = types.package;
         default = pkgs.jq;
         defaultText = literalExample "pkgs.jq";
-        description = "jq package to use.";
+        description = "The jq package to use.";
       };
 
       colors = mkOption {
